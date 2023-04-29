@@ -16,7 +16,7 @@ class ImportKML(Resource):
     # @marshal_with(response_model)
     @namespace.expect(import_kml_parser, validate=True)
     def post(self):
-        form = import_kml_parser.parse_args(trim=True, bundle_errors=True)
+        form = import_kml_parser.parse_args()
         return {
             "endpoint": "POST geoserver/import/kml",
             "form": f"{form}",
@@ -32,7 +32,7 @@ class UpdateKML(Resource):
     # @marshal_with(response_model)
     @namespace.expect(import_kml_parser, validate=True)
     def put(self):
-        form = import_kml_parser.parse_args(trim=True, bundle_errors=True)
+        form = import_kml_parser.parse_args()
         return {
             "endpoint": "POST geoserver/append/kml",
             "form": f"{form}",
@@ -48,7 +48,7 @@ class DeleteKML(Resource):
     # @marshal_with(response_model)
     @namespace.expect(import_kml_parser, validate=True)
     def delete(self):
-        form = import_kml_parser.parse_args(trim=True, bundle_errors=True)
+        form = import_kml_parser.parse_args()
         return {
             "endpoint": "POST geoserver/remove/kml",
             "form": f"{form}",

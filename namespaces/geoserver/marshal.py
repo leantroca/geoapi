@@ -55,6 +55,14 @@ password = reqparse.Argument(
     help="Your password for wms.minhabitat.gob.ar.",
 )
 
+usuario_ele = reqparse.Argument(
+    "Usiario del sistema de Ele",
+    dest="ele",
+    location="form",
+    type=str,
+    required=False,
+    help="El usuario que se logueó en Ele, si esta request viene de Ele.",
+)
 
 def form_maker(*args):
     request_parser = reqparse.RequestParser()
@@ -63,4 +71,4 @@ def form_maker(*args):
     return request_parser
 
 
-import_kml_parser = form_maker(file, layer, username, password)
+import_kml_parser = form_maker(file, layer, username, password, usuario_ele)
