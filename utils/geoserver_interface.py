@@ -1,5 +1,7 @@
-import requests
 from urllib.parse import urlparse
+
+import requests
+
 from api.config import settings
 
 
@@ -58,10 +60,10 @@ class Geoserver:
                 setattr(self, f"_{key}", value)
 
     def list_layers(self) -> list:
-        return [layer["name"] for layer in requests.get(
-            f"{self.rest_url}/workspaces/{self.workspace}/layers.json",
-            auth=(self.username, self.password),
-        ).json()["layers"]["layer"]]
- 
-            
-    
+        return [
+            layer["name"]
+            for layer in requests.get(
+                f"{self.rest_url}/workspaces/{self.workspace}/layers.json",
+                auth=(self.username, self.password),
+            ).json()["layers"]["layer"]
+        ]

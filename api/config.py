@@ -1,7 +1,7 @@
 import os
-import toml
 from types import SimpleNamespace
 
+import toml
 
 # Variables globales para el proyecto.
 PROJECT_DIR = os.environ.get("PROJECT_DIR", os.path.abspath(os.getcwd()))
@@ -17,7 +17,7 @@ fallback_locations = [
 ]
 
 
-def load_toml_file(path:str=None):
+def load_toml_file(path: str = None):
     if path:
         return toml.load(path)
     for fallback in fallback_locations:
@@ -27,9 +27,17 @@ def load_toml_file(path:str=None):
             pass
         except toml.decoder.TomlDecodeError as error:
             print(f"[LOG][ERROR]: Using settings file {fallback}")
-            print(f"[LOG][ERROR]: Line number {error.lineno}, Column number {error.colno}")
+            print(
+                f"[LOG][ERROR]: Line number {error.lineno}, Column number {error.colno}"
+            )
             raise error
     raise FileNotFoundError("settings.toml file not found.")
+
+
+def load_json_file(path: str = None) -> dict:
+    return {
+        "DEFAULT_CHUNKSIZE": 50,
+    }
 
 
 def get_settings(
@@ -51,4 +59,6 @@ def get_settings(
 
 
 # Se definen los settings que usa el proyecto.
-settings = get_settings()
+settings = get_settings(
+    **load_json_file(),
+)

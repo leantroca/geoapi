@@ -1,5 +1,5 @@
-from flask import request
 from flask_restx import Namespace, Resource
+
 from utils.geoserver_interface import Geoserver
 
 geo = Geoserver()

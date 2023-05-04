@@ -64,6 +64,7 @@ usuario_ele = reqparse.Argument(
     help="El usuario que se logueó en Ele, si esta request viene de Ele.",
 )
 
+
 def form_maker(*args):
     request_parser = reqparse.RequestParser()
     for arg in args:

@@ -1,4 +1,5 @@
 from flask import Flask
+
 from api import blueprint
 
 app = Flask(__name__)

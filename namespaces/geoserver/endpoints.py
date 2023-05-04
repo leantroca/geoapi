@@ -1,5 +1,5 @@
 from flask import request
-from flask_restx import Api, Namespace, Resource
+from flask_restx import Namespace, Resource
 
 from .marshal import import_kml_parser
 
