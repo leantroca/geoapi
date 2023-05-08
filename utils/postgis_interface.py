@@ -1,9 +1,9 @@
 import re
 from typing import Literal, Union
+from urllib.parse import quote_plus
 
 import sqlalchemy
 from geopandas import GeoDataFrame
-from sqlalchemy import text
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from api.config import settings
@@ -59,14 +59,15 @@ class PostGIS:
         return self._driver
 
     @property
-    def url(self) -> sqlalchemy.URL:
-        return sqlalchemy.URL.create(
-            self.driver,
-            username=self.username,
-            password=self.password,
-            host=self.host,
-            database=self.database,
-        )
+    def url(self) -> str:
+        return f"{self.driver}://{self.username}:{quote_plus(self.password)}@{self.host}/{self.database}"
+        # return sqlalchemy.URL.create(
+        #     self.driver,
+        #     username=self.username,
+        #     password=self.password,
+        #     host=self.host,
+        #     database=self.database,
+        # )
 
     @property
     def engine(self) -> sqlalchemy.engine.Engine:
@@ -112,7 +113,7 @@ class PostGIS:
             #   "sqlalchemy.exc.ObjectNotExecutableError: Not an executable object"
             #   is introduced in sqlalchemy = "^2.0.0". Execute can be done with
             #   engine in sqla 1.4.
-            self.session.execute(text(query + " ;"))
+            self.engine.execute(query + " ;")
 
     def list_tables(self) -> list:
         return sqlalchemy.inspect(self.engine).get_table_names(schema=self.schema)

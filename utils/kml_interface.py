@@ -79,9 +79,9 @@ def load_kml_in_chunks(path: str, chunksize=50, **kwargs) -> geopandas.GeoDataFr
             layer_list = []
             sum_chunks = 0
         else:
-            # Chunk will be nigger than chunksize...
+            # Chunk will be bigger than chunksize...
             while chunk.shape[0] + sum_chunks > chunksize:
-                # Start adding silces until reaching chunksize.
+                # Start adding slices until reaching chunksize.
                 slice_rows = chunksize - sum_chunks
                 slice_chunk = chunk.iloc[range(slice_rows)]
                 layer_list.append(slice_chunk)
@@ -91,7 +91,7 @@ def load_kml_in_chunks(path: str, chunksize=50, **kwargs) -> geopandas.GeoDataFr
                         ignore_index=True,
                     ),
                 )
-                layer_list = []  # [chunk.loc[range(slice_rows, chunk.shape[0])]]
+                layer_list = []
                 sum_chunks = 0
                 chunk = chunk.iloc[range(slice_rows, chunk.shape[0])]
             # Finally, add remaining slice to the next chunk.
