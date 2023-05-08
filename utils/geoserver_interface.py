@@ -1,3 +1,4 @@
+from typing import Literal
 from urllib.parse import urlparse
 
 import requests
@@ -17,6 +18,7 @@ class Geoserver:
         password: str = None,
         workspace: str = None,
         datastore: str = None,
+        coordsys: str = None,
         *args,
         **kwargs,
     ):
@@ -25,6 +27,9 @@ class Geoserver:
         self._password = password or settings.__getattribute__("GEOSERVER_PASSWORD")
         self._workspace = workspace or settings.__getattribute__("GEOSERVER_WORKSPACE")
         self._datastore = datastore or settings.__getattribute__("GEOSERVER_DATASTORE")
+        self._coordsys = (
+            coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
+        )
 
     @property
     def base_url(self) -> str:
@@ -54,6 +59,10 @@ class Geoserver:
     def datastore(self) -> str:
         return self._datastore
 
+    @property
+    def coordsys(self) -> str:
+        return self._coordsys
+
     def set(self, **kwargs) -> None:
         for key, value in kwargs.items():
             if hasattr(self, f"_{key}"):
@@ -67,3 +76,24 @@ class Geoserver:
                 auth=(self.username, self.password),
             ).json()["layers"]["layer"]
         ]
+
+    def push_layer(self, layer: str, if_exists: Literal["fail", "replace"] = "fail"):
+        if if_exists.lower() == "fail" and layer in self.list_layers():
+            raise Exception("Layer {layer} already exists!")
+        response = requests.post(
+            f"{self.rest_url}/workspaces/{self.workspace}/datastores/{self.datastore}/featuretypes\
+            ?recalculate=nativebbox,latlonbbox",
+            auth=(self.username, self.password),
+            headers={"Content-type": "text/xml"},
+            data=f"""
+                <featureType>
+                  <name>{layer}</name>
+                  <nativeCRS>{self.coordsys}</nativeCRS>
+                  <srs>{self.coordsys}</srs>
+                  <nativeBoundingBox>
+                    <crs>{self.coordsys}</crs>
+                  </nativeBoundingBox>
+                </featureType>
+            """,
+        )
+        response.raise_for_status()

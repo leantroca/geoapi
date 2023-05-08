@@ -354,6 +354,22 @@ doc = ["Sphinx (==5.3.0)", "alabaster (==0.7.12)", "sphinx-issues (==3.0.1)"]
 test = ["Faker (==2.0.0)", "blinker", "invoke (==2.0.0)", "mock (==3.0.5)", "pytest (==7.0.1)", "pytest-benchmark (==3.4.1)", "pytest-cov (==4.0.0)", "pytest-flask (==1.2.0)", "pytest-mock (==3.6.1)", "pytest-profiling (==1.7.0)", "twine (==3.8.0)", "tzlocal"]
 
 [[package]]
+name = "geoalchemy2"
+version = "0.13.2"
+description = "Using SQLAlchemy with Spatial Databases"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "GeoAlchemy2-0.13.2-py3-none-any.whl", hash = "sha256:5723f302c54a22ae9b2fd37eed4d26bb7f0be96b2d4d3dd8ec488ecd5d7dfa6e"},
+    {file = "GeoAlchemy2-0.13.2.tar.gz", hash = "sha256:164c17ec4e566e4751ec1e8906e1c10316203a0535e6c5f80f7d7252791fd1f5"},
+]
+
+[package.dependencies]
+packaging = "*"
+SQLAlchemy = ">=1.4"
+
+[[package]]
 name = "geopandas"
 version = "0.12.2"
 description = "Geographic pandas extensions"
@@ -1223,4 +1239,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "4c92e50cd01bfdb3c83e392392c612fe0d55f72acbfa4c5df328916e417d1be6"
+content-hash = "cdc26f5e451e6c560da7cdf31ab44986042f39ec8e0526b00de9e52295abcf7c"

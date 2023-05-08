@@ -14,7 +14,8 @@ from werkzeug.datastructures import FileStorage
 # parser.add_argument('session_id', location='cookies')
 #
 # # From file uploads
-# parser.add_argument('picture', type=werkzeug.datastructures.FileStorage, location='files')
+# parser.add_argument('picture', type=werkzeug.datastructures.FileStorage,
+#    location='files')
 #
 # Docs on argument construction in:
 # https://flask-restx.readthedocs.io/en/latest/api.html#module-flask_restx.reqparse
@@ -37,32 +38,110 @@ layer = reqparse.Argument(
     help="Target layer name to be created.",
 )
 
-username = reqparse.Argument(
-    "Geoserver Username",
-    dest="user",
-    location="form",
-    type=str,
-    required=True,
-    help="Your username for wms.minhabitat.gob.ar.",
-)
+# username = reqparse.Argument(
+#     "Geoserver Username",
+#     dest="user",
+#     location="form",
+#     type=str,
+#     required=True,
+#     help="Your username for wms.minhabitat.gob.ar.",
+# )
 
-password = reqparse.Argument(
-    "Geoserver Password",
-    dest="pass",
-    location="form",
-    type=str,
-    required=True,
-    help="Your password for wms.minhabitat.gob.ar.",
-)
+# password = reqparse.Argument(
+#     "Geoserver Password",
+#     dest="pass",
+#     location="form",
+#     type=str,
+#     required=True,
+#     help="Your password for wms.minhabitat.gob.ar.",
+# )
 
-usuario_ele = reqparse.Argument(
-    "Usiario del sistema de Ele",
-    dest="ele",
-    location="form",
-    type=str,
-    required=False,
-    help="El usuario que se logueó en Ele, si esta request viene de Ele.",
-)
+optional_arguments = {
+    "obra_id": reqparse.Argument(
+        "obra_id",
+        dest="obra_id",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_operatoria": reqparse.Argument(
+        "obra_operatoria",
+        dest="obra_operatoria",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_provincia": reqparse.Argument(
+        "obra_provincia",
+        dest="obra_provincia",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_departamento": reqparse.Argument(
+        "obra_departamento",
+        dest="obra_departamento",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_municipio": reqparse.Argument(
+        "obra_municipio",
+        dest="obra_municipio",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_localidad": reqparse.Argument(
+        "obra_localidad",
+        dest="obra_localidad",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_estado": reqparse.Argument(
+        "obra_estado",
+        dest="obra_estado",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_descripción": reqparse.Argument(
+        "obra_descripción",
+        dest="obra_descripción",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_cantidad": reqparse.Argument(
+        "obra_cantidad",
+        dest="obra_cantidad",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_categoría": reqparse.Argument(
+        "obra_categoría",
+        dest="obra_categoría",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_ente": reqparse.Argument(
+        "obra_ente",
+        dest="obra_ente",
+        location="form",
+        type=str,
+        required=False,
+    ),
+    "obra_fuente": reqparse.Argument(
+        "obra_fuente",
+        dest="obra_fuente",
+        location="form",
+        type=str,
+        required=False,
+    ),
+}
 
 
 def form_maker(*args):
@@ -72,4 +151,8 @@ def form_maker(*args):
     return request_parser
 
 
-import_kml_parser = form_maker(file, layer, username, password, usuario_ele)
+import_kml_parser = form_maker(
+    file,
+    layer,
+    *optional_arguments.values(),
+)

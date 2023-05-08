@@ -34,10 +34,10 @@ def load_toml_file(path: str = None):
     raise FileNotFoundError("settings.toml file not found.")
 
 
-def load_json_file(path: str = None) -> dict:
-    return {
-        "DEFAULT_CHUNKSIZE": 50,
-    }
+# def load_json_file(path: str = None) -> dict:
+#     return {
+#         "DEFAULT_CHUNKSIZE": 50,
+#     }
 
 
 def get_settings(
@@ -60,5 +60,5 @@ def get_settings(
 
 # Se definen los settings que usa el proyecto.
 settings = get_settings(
-    **load_json_file(),
+    # **load_json_file(),
 )
