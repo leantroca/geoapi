@@ -11,8 +11,10 @@ ENVIRONMENT = os.environ.get("ENVIRONMENT")
 # Ubicaciones por defecto del archivo settings.toml.
 fallback_locations = [
     os.path.join(PROJECT_DIR, "settings.toml"),
+    os.path.join(PROJECT_DIR, "etc", "settings.toml"),
     os.path.join(PROJECT_DIR, "api", "settings.toml"),
     "settings.toml",
+    "etc/settings.toml",
     "api/settings.toml",
 ]
 

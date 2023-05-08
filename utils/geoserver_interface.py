@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from api.config import settings
+from etc.config import settings
 
 
 class Geoserver:

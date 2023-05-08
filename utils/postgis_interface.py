@@ -1,12 +1,12 @@
 import re
-from typing import Literal, Union
+from typing import Literal, Union, Optional
 from urllib.parse import quote_plus
 
 import sqlalchemy
 from geopandas import GeoDataFrame
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from api.config import settings
+from etc.config import settings
 
 
 class PostGIS:
@@ -16,12 +16,13 @@ class PostGIS:
 
     def __init__(
         self,
-        host: str = None,
-        username: str = None,
-        password: str = None,
-        database: str = None,
-        schema: str = None,
-        driver: str = None,
+        host: Optional[str] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
+        driver: Optional[str] = None,
+        coordsys :Optional[str] = None,
         *args,
         **kwargs,
     ):
@@ -31,32 +32,46 @@ class PostGIS:
         self._database = database or settings.__getattribute__("POSTGIS_DATABASE")
         self._schema = schema or settings.__getattribute__("POSTGIS_SCHEMA")
         self._driver = driver or settings.__getattribute__("POSTGIS_DRIVER")
+        self._coordsys = (
+            coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
+        )
         self._engine = None
         self._session = None
 
     @property
-    def host(self) -> str:
+    def host(self) -> Optional[str]:
         return self._host
 
     @property
-    def username(self) -> str:
+    def username(self) -> Optional[str]:
         return self._username
 
     @property
-    def password(self) -> str:
+    def password(self) -> Optional[str]:
         return self._password
 
     @property
-    def database(self) -> str:
+    def database(self) -> Optional[str]:
         return self._database
 
     @property
-    def schema(self) -> str:
+    def schema(self) -> Optional[str]:
         return self._schema
 
     @property
-    def driver(self) -> str:
+    def driver(self) -> Optional[str]:
         return self._driver
+
+    @property
+    def coordsys(self) -> Optional[str]:
+        return self._coordsys
+
+    @property
+    def coordsysid(self) -> Optional[int]:
+        if not self.coordsys or not re.findall(r"\d+", self.coordsys):
+            return None
+        return int("".join(re.findall(r"\d+", self.coordsys)))
+
 
     @property
     def url(self) -> str:
@@ -68,6 +83,10 @@ class PostGIS:
         #     host=self.host,
         #     database=self.database,
         # )
+
+    @property
+    def url_for_alembic(self) -> str:
+        return self.url.replace("%", "%%")
 
     @property
     def engine(self) -> sqlalchemy.engine.Engine:
@@ -86,11 +105,11 @@ class PostGIS:
             if hasattr(self, f"_{key}"):
                 setattr(self, f"_{key}", value)
 
-    def create_engine(self) -> sqlalchemy.engine.Engine:
+    def create_engine(self) -> None:
         self._engine = sqlalchemy.create_engine(self.url)
         self._engine.execution_options(autocommit=True)
 
-    def create_session(self) -> sqlalchemy.orm.scoped_session:
+    def create_session(self) -> None:
         self._session = scoped_session(sessionmaker(bind=self.engine))
 
     def clean(self, query: str) -> str:
@@ -109,10 +128,6 @@ class PostGIS:
         for query in [
             self.clean(query) for query in sql.split(";") if self.clean(query) != ""
         ]:
-            # TODO: Downgrade to sqlalchemy = "^1.4.39".
-            #   "sqlalchemy.exc.ObjectNotExecutableError: Not an executable object"
-            #   is introduced in sqlalchemy = "^2.0.0". Execute can be done with
-            #   engine in sqla 1.4.
             self.engine.execute(query + " ;")
 
     def list_tables(self) -> list:

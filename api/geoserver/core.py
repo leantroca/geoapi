@@ -1,7 +1,7 @@
 import geopandas
 from flask_restx.reqparse import ParseResult
 
-from api.config import settings
+from etc.config import settings
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import read_kml
 from utils.postgis_interface import PostGIS

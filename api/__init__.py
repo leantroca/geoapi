@@ -1,8 +1,8 @@
 from flask import Blueprint
 from flask_restx import Api
 
-from namespaces.geoserver.endpoints import namespace as geoserver
-from namespaces.status.endpoints import namespace as status
+from .geoserver.endpoints import namespace as geoserver
+from .status.endpoints import namespace as status
 
 blueprint = Blueprint("api", __name__)
 api = Api(blueprint)
