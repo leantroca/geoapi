@@ -32,8 +32,16 @@ target_metadata = Base.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
-compare_server_types = True
 
+
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == "table":
+        if f"{postgis.schema}.{name}" in target_metadata.tables:
+            return True
+        else:
+            return False
+    else:
+        return False
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -53,6 +61,11 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        compare_server_types=True,
+        compare_type=True,
+        include_schemas=True,
+        include_object=include_object,
+        version_table_schema=postgis.schema,
     )
 
     with context.begin_transaction():
@@ -74,7 +87,13 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_server_types=True,
+            compare_type=True,
+            include_schemas=True,
+            include_object=include_object,
+            version_table_schema=postgis.schema,
         )
 
         with context.begin_transaction():

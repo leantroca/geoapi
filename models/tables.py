@@ -8,13 +8,20 @@ from geoalchemy2 import Geometry
 from etc.config import settings
 from utils.postgis_interface import PostGIS
 from datetime import datetime
+from sqlalchemy import MetaData
 
 
 postgis = PostGIS()
 
+engine = postgis.engine
 
 def declarative_base(cls):
-	return declarative.declarative_base(cls=cls)
+	return declarative.declarative_base(
+		cls=cls,
+		metadata=MetaData(
+			schema=postgis.schema,
+		)
+	)
 
 
 @declarative_base
@@ -59,5 +66,5 @@ class Geometries(Base):
 
 	layer_id = Column(Integer, ForeignKey("layers.id"), nullable=True)
 
-	layer = relationship("Layers", uselist=False)
+	layer = relationship("Layers", backref="geometry_ids")
 
