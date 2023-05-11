@@ -50,7 +50,7 @@ class Layers(Base):
 	estado = Column(String, nullable=True, default=None)
 	descripcion = Column(String, nullable=True, default=None)
 	cantidad = Column(String, nullable=True, default=None)
-	categoría = Column(String, nullable=True, default=None)
+	categoria = Column(String, nullable=True, default=None)
 	ente = Column(String, nullable=True, default=None)
 	fuente = Column(String, nullable=True, default=None)
 	json = Column(JSON, nullable=True, default=None)

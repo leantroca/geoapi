@@ -107,10 +107,16 @@ class PostGIS:
 
     def create_engine(self) -> None:
         self._engine = sqlalchemy.create_engine(self.url)
-        self._engine.execution_options(autocommit=True)
+        self._engine.execution_options(autocommit=False)
 
     def create_session(self) -> None:
-        self._session = scoped_session(sessionmaker(bind=self.engine))
+        self._session = scoped_session(
+            sessionmaker(
+                bind=self.engine,
+                autocommit=False,
+                autoflush=False,
+            ),
+        )
 
     def clean(self, query: str) -> str:
         # Removes line comments

@@ -38,111 +38,100 @@ layer = reqparse.Argument(
     help="Target layer name to be created.",
 )
 
-# username = reqparse.Argument(
-#     "Geoserver Username",
-#     dest="user",
-#     location="form",
-#     type=str,
-#     required=True,
-#     help="Your username for wms.minhabitat.gob.ar.",
-# )
-
-# password = reqparse.Argument(
-#     "Geoserver Password",
-#     dest="pass",
-#     location="form",
-#     type=str,
-#     required=True,
-#     help="Your password for wms.minhabitat.gob.ar.",
-# )
-
 optional_arguments = {
-    "obra_id": reqparse.Argument(
-        "obra_id",
-        dest="obra_id",
+    "obra": reqparse.Argument(
+        "obra",
+        dest="obra",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_operatoria": reqparse.Argument(
-        "obra_operatoria",
-        dest="obra_operatoria",
+    "operatoria": reqparse.Argument(
+        "operatoria",
+        dest="operatoria",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_provincia": reqparse.Argument(
-        "obra_provincia",
-        dest="obra_provincia",
+    "provincia": reqparse.Argument(
+        "provincia",
+        dest="provincia",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_departamento": reqparse.Argument(
-        "obra_departamento",
-        dest="obra_departamento",
+    "departamento": reqparse.Argument(
+        "departamento",
+        dest="departamento",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_municipio": reqparse.Argument(
-        "obra_municipio",
-        dest="obra_municipio",
+    "municipio": reqparse.Argument(
+        "municipio",
+        dest="municipio",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_localidad": reqparse.Argument(
-        "obra_localidad",
-        dest="obra_localidad",
+    "localidad": reqparse.Argument(
+        "localidad",
+        dest="localidad",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_estado": reqparse.Argument(
-        "obra_estado",
-        dest="obra_estado",
+    "estado": reqparse.Argument(
+        "estado",
+        dest="estado",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_descripción": reqparse.Argument(
-        "obra_descripción",
-        dest="obra_descripción",
+    "descripcion": reqparse.Argument(
+        "descripcion",
+        dest="descripcion",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_cantidad": reqparse.Argument(
-        "obra_cantidad",
-        dest="obra_cantidad",
+    "cantidad": reqparse.Argument(
+        "cantidad",
+        dest="cantidad",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_categoría": reqparse.Argument(
-        "obra_categoría",
-        dest="obra_categoría",
+    "categoria": reqparse.Argument(
+        "categoria",
+        dest="categoria",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_ente": reqparse.Argument(
-        "obra_ente",
-        dest="obra_ente",
+    "ente": reqparse.Argument(
+        "ente",
+        dest="ente",
         location="form",
         type=str,
         required=False,
     ),
-    "obra_fuente": reqparse.Argument(
-        "obra_fuente",
-        dest="obra_fuente",
+    "fuente": reqparse.Argument(
+        "fuente",
+        dest="fuente",
         location="form",
         type=str,
         required=False,
     ),
 }
 
+json_metadata = reqparse.Argument(
+    "json",
+    dest="json",
+    location="form",
+    type=str,
+    required=False,
+)
 
 def form_maker(*args):
     request_parser = reqparse.RequestParser()
@@ -155,4 +144,11 @@ import_kml_parser = form_maker(
     file,
     layer,
     *optional_arguments.values(),
+    json_metadata,
 )
+
+# from . import namespace
+
+# body_model: namespace.model(
+
+# )
