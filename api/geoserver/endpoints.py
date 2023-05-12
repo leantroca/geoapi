@@ -8,17 +8,19 @@ from .marshal import import_kml_parser, optional_arguments
 
 
 
-def parse_kwargs(*args, **kwargs):
-    def wrapper(target):
-        kwargs = {}
-        form = import_kml_parser.parse_args()
-        body = json.loads(form.get("json", "{}"))
-        body.update(form)
-        for key in form.keys():
-            kwargs[key] = body.pop(key, None)
-        kwargs["json"] = body
-        target(**kwargs)
-    return wrapper
+def parse_kwargs(form):
+    kwargs = {
+        "file": form.file,
+        "layer": form.layer,
+    }
+    body = json.loads(getattr(form, "json") or "{}")
+    body.update(
+        {key: getattr(form, key) for key in optional_arguments if getattr(form, key)}
+    )
+    for key in optional_arguments:
+        kwargs[key] = body.pop(key, None)
+    kwargs["json"] = body
+    return kwargs
         
 
 
@@ -30,18 +32,18 @@ class ImportKML(Resource):
     # @marshal_with(response_model)
     @namespace.expect(import_kml_parser, validate=True)
     def post(self):
-        form = import_kml_parser.parse_args()
-        kwargs = {
-            "file": form.file,
-            "layer": form.layer,
-        }
-        body = json.loads(getattr(form, "json", "{}"))
-        body.update(
-            {key: getattr(form, key) for key in optional_arguments if getattr(form, key)}
-        )
-        for key in optional_arguments:
-            kwargs[key] = body.pop(key, None)
-        kwargs["json"] = body
+        kwargs = parse_kwargs(import_kml_parser.parse_args())
+        # kwargs = {
+        #     "file": form.file,
+        #     "layer": form.layer,
+        # }
+        # body = json.loads(getattr(form, "json") or "{}")
+        # body.update(
+        #     {key: getattr(form, key) for key in optional_arguments if getattr(form, key)}
+        # )
+        # for key in optional_arguments:
+        #     kwargs[key] = body.pop(key, None)
+        # kwargs["json"] = body
         # kml = load_post_kml(form)
         # kml.to_csv("/home/rainmaker/Desktop/kml.csv")
         ingest_filelike_layer(**kwargs)

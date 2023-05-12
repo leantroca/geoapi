@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 import sqlalchemy
 from geopandas import GeoDataFrame
 from sqlalchemy.orm import scoped_session, sessionmaker
+from api.geoserver.marshal import import_kml_parser, optional_arguments
 
 from etc.config import settings
 
@@ -139,72 +140,84 @@ class PostGIS:
     def list_tables(self) -> list:
         return sqlalchemy.inspect(self.engine).get_table_names(schema=self.schema)
 
-    def create_table(
-        self,
-        tablename: str,
-        data: Union[str, GeoDataFrame],
-        if_exists: Literal["fail", "replace", "append"] = "fail",
-    ) -> None:
-        if isinstance(data, str):
-            if tablename in self.list_tables():
-                if if_exists.lower() == "fail":
-                    raise Exception("create_table: Table {tablename} already exists!")
-                if if_exists.lower() == "replace":
-                    self.drop_table(tablename)
-                if if_exists.lower() == "append":
-                    raise Exception(
-                        "create_table: Need to develop the append by query option."
-                    )
-                    # self.execute(f"INSERT INTO ...")
-                    return
-            self.execute(
-                f"CREATE TABLE {self.schema}.{tablename} AS {self.clean(data)} ;"
-            )
-            return
+    def get_or_create(self, model, **kwargs):
+        instance = self.session.query(model).filter_by(
+            **{key:value for key, value in kwargs.items() if key not in optional_arguments and key in dir(model)}
+        ).first()
+        if instance:
+            return instance
+        else:
+            instance = model(**kwargs)
+            self.session.add(instance)
+            self.session.commit()
+            return instance
 
-        if isinstance(data, GeoDataFrame):
-            data.to_postgis(
-                name=tablename,
-                con=self.engine,
-                if_exists=if_exists,
-                schema=self.schema,
-                index=False,
-                # dtype=str,
-                chunksize=settings.DEFAULT_CHUNKSIZE,
-            )
-            return
+    # def create_table(
+    #     self,
+    #     tablename: str,
+    #     data: Union[str, GeoDataFrame],
+    #     if_exists: Literal["fail", "replace", "append"] = "fail",
+    # ) -> None:
+    #     if isinstance(data, str):
+    #         if tablename in self.list_tables():
+    #             if if_exists.lower() == "fail":
+    #                 raise Exception("create_table: Table {tablename} already exists!")
+    #             if if_exists.lower() == "replace":
+    #                 self.drop_table(tablename)
+    #             if if_exists.lower() == "append":
+    #                 raise Exception(
+    #                     "create_table: Need to develop the append by query option."
+    #                 )
+    #                 # self.execute(f"INSERT INTO ...")
+    #                 return
+    #         self.execute(
+    #             f"CREATE TABLE {self.schema}.{tablename} AS {self.clean(data)} ;"
+    #         )
+    #         return
 
-        raise Exception(f"create_table: Unable to handle {type(data)} objects!")
+    #     if isinstance(data, GeoDataFrame):
+    #         data.to_postgis(
+    #             name=tablename,
+    #             con=self.engine,
+    #             if_exists=if_exists,
+    #             schema=self.schema,
+    #             index=False,
+    #             # dtype=str,
+    #             chunksize=settings.DEFAULT_CHUNKSIZE,
+    #         )
+    #         return
 
-    def drop_table(
-        self,
-        tablename: str,
-        depends: str = "CASCADE",
-        if_not_exists: Literal["fail", "ignore"] = "fail",
-    ) -> None:
-        if tablename in self.list_tables() and if_not_exists.lower() == "fail":
-            raise Exception(f"drop_table: Table {tablename} doesn't exist!")
-        self.execute(
-            f"DROP TABLE IF EXISTS {self.schema}.{tablename} {depends.upper()} ;"
-        )
+    #     raise Exception(f"create_table: Unable to handle {type(data)} objects!")
 
-    def append_table(
-        self,
-        tablename: str,
-        data: Union[str, GeoDataFrame],
-        if_not_exists: Literal["fail", "create"] = "fail",
-    ) -> None:
-        if tablename not in self.list_tables():
-            raise Exception(f"append_table: Table {tablename} doesn't exist!")
-        if isinstance(data, GeoDataFrame):
-            data.to_postgis(
-                name=tablename,
-                con=self.engine,
-                if_exists="append",
-                schema=self.schema,
-                index=False,
-                dtype=str,
-                chunksize=settings.DEFAULT_CHUNKSIZE,
-            )
-            return
-        raise Exception(f"create_table: Unable to handle {type(data)} objects!")
+    # def drop_table(
+    #     self,
+    #     tablename: str,
+    #     depends: str = "CASCADE",
+    #     if_not_exists: Literal["fail", "ignore"] = "fail",
+    # ) -> None:
+    #     if tablename in self.list_tables() and if_not_exists.lower() == "fail":
+    #         raise Exception(f"drop_table: Table {tablename} doesn't exist!")
+    #     self.execute(
+    #         f"DROP TABLE IF EXISTS {self.schema}.{tablename} {depends.upper()} ;"
+    #     )
+
+    # def append_table(
+    #     self,
+    #     tablename: str,
+    #     data: Union[str, GeoDataFrame],
+    #     if_not_exists: Literal["fail", "create"] = "fail",
+    # ) -> None:
+    #     if tablename not in self.list_tables():
+    #         raise Exception(f"append_table: Table {tablename} doesn't exist!")
+    #     if isinstance(data, GeoDataFrame):
+    #         data.to_postgis(
+    #             name=tablename,
+    #             con=self.engine,
+    #             if_exists="append",
+    #             schema=self.schema,
+    #             index=False,
+    #             dtype=str,
+    #             chunksize=settings.DEFAULT_CHUNKSIZE,
+    #         )
+    #         return
+    #     raise Exception(f"create_table: Unable to handle {type(data)} objects!")

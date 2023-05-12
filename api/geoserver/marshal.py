@@ -123,15 +123,15 @@ optional_arguments = {
         type=str,
         required=False,
     ),
+    "json": reqparse.Argument(
+        "json",
+        dest="json",
+        location="form",
+        type=str,
+        required=False,
+    ),
 }
 
-json_metadata = reqparse.Argument(
-    "json",
-    dest="json",
-    location="form",
-    type=str,
-    required=False,
-)
 
 def form_maker(*args):
     request_parser = reqparse.RequestParser()
@@ -144,7 +144,6 @@ import_kml_parser = form_maker(
     file,
     layer,
     *optional_arguments.values(),
-    json_metadata,
 )
 
 # from . import namespace

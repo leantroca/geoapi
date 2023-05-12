@@ -53,7 +53,8 @@ def ingest_filelike_layer(
     fuente:Optional[str]=None,
     json:Optional[str]=None,
 ):
-    new_layer = Layers(
+    new_layer = postgis.get_or_create(
+        Layers,
         name=layer,
         obra=obra,
         operatoria=operatoria,

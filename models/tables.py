@@ -40,7 +40,7 @@ class Base(object):
 class Layers(Base):
 	__tablename__ = "layers"
 
-	name = Column(String, nullable=False)
+	name = Column(String, nullable=False, unique=True)
 	obra = Column(String, nullable=True, default=None)
 	operatoria = Column(String, nullable=True, default=None)
 	provincia = Column(String, nullable=True, default=None)
