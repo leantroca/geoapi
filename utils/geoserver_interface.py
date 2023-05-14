@@ -79,10 +79,11 @@ class Geoserver:
 
     def push_layer(self, layer: str, if_exists: Literal["fail", "replace"] = "fail"):
         if if_exists.lower() == "fail" and layer in self.list_layers():
-            raise Exception("Layer {layer} already exists!")
+            raise Exception(f"Layer {layer} already exists!")
         response = requests.post(
-            f"{self.rest_url}/workspaces/{self.workspace}/datastores/{self.datastore}/featuretypes\
-            ?recalculate=nativebbox,latlonbbox",
+            f"{self.rest_url}/workspaces/{self.workspace}"
+            + "/datastores/{self.datastore}/featuretypes"
+            + "?recalculate=nativebbox,latlonbbox",
             auth=(self.username, self.password),
             headers={"Content-type": "text/xml"},
             data=f"""
@@ -91,6 +92,10 @@ class Geoserver:
                   <nativeCRS>{self.coordsys}</nativeCRS>
                   <srs>{self.coordsys}</srs>
                   <nativeBoundingBox>
+                    <minx>-73.4154357571</minx>
+                    <maxx>-55.25</maxx>
+                    <miny>-53.628348965</miny>
+                    <maxy>-21.8323104794</maxy>
                     <crs>{self.coordsys}</crs>
                   </nativeBoundingBox>
                 </featureType>

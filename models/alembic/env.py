@@ -1,9 +1,7 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 from models.tables import Base
 from utils.postgis_interface import PostGIS
@@ -42,6 +40,7 @@ def include_object(object, name, type_, reflected, compare_to):
             return False
     else:
         return False
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

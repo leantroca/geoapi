@@ -1,11 +1,9 @@
 import re
-from typing import Literal, Union, Optional
+from typing import Optional
 from urllib.parse import quote_plus
 
 import sqlalchemy
-from geopandas import GeoDataFrame
 from sqlalchemy.orm import scoped_session, sessionmaker
-from api.geoserver.marshal import import_kml_parser, optional_arguments
 
 from etc.config import settings
 
@@ -23,7 +21,7 @@ class PostGIS:
         database: Optional[str] = None,
         schema: Optional[str] = None,
         driver: Optional[str] = None,
-        coordsys :Optional[str] = None,
+        coordsys: Optional[str] = None,
         *args,
         **kwargs,
     ):
@@ -73,10 +71,12 @@ class PostGIS:
             return None
         return int("".join(re.findall(r"\d+", self.coordsys)))
 
-
     @property
     def url(self) -> str:
-        return f"{self.driver}://{self.username}:{quote_plus(self.password)}@{self.host}/{self.database}"
+        return (
+            f"{self.driver}://{self.username}:"
+            + f"{quote_plus(self.password)}@{self.host}/{self.database}"
+        )
         # return sqlalchemy.URL.create(
         #     self.driver,
         #     username=self.username,
@@ -140,17 +140,32 @@ class PostGIS:
     def list_tables(self) -> list:
         return sqlalchemy.inspect(self.engine).get_table_names(schema=self.schema)
 
-    def get_or_create(self, model, **kwargs):
-        instance = self.session.query(model).filter_by(
-            **{key:value for key, value in kwargs.items() if key not in optional_arguments and key in dir(model)}
-        ).first()
-        if instance:
-            return instance
-        else:
-            instance = model(**kwargs)
-            self.session.add(instance)
-            self.session.commit()
-            return instance
+    def create_view(self, layer: str) -> None:
+        self.execute(
+            f"""
+            CREATE OR REPLACE VIEW {self.schema}."{layer}" AS (
+                SELECT
+                    la."name" AS "layer",
+                    ge."name" AS "nombre",
+                    ge."geometry" AS "geometry"
+                FROM {self.schema}.layers AS la
+                JOIN {self.schema}.geometries AS ge ON la.id = ge.layer_id
+                WHERE la.name = '{layer}')
+            """
+        )
+
+    # def get_or_create(self, model, **kwargs):
+    #     instance = self.session.query(model).filter_by(
+    #         **{key:value for key, value in kwargs.items() \
+    #         if key not in optional_arguments and key in dir(model)}
+    #     ).first()
+    #     if instance:
+    #         return instance
+    #     else:
+    #         instance = model(**kwargs)
+    #         self.session.add(instance)
+    #         self.session.commit()
+    #         return instance
 
     # def create_table(
     #     self,
