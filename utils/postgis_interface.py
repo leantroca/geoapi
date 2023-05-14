@@ -2,6 +2,7 @@ import re
 from typing import Optional
 from urllib.parse import quote_plus
 
+import pandas
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -119,7 +120,8 @@ class PostGIS:
             ),
         )
 
-    def clean(self, query: str) -> str:
+    @staticmethod
+    def clean(query: str) -> str:
         # Removes line comments
         query = re.sub("--.*", " ", query)
         # Removes block comments
@@ -140,6 +142,9 @@ class PostGIS:
     def list_tables(self) -> list:
         return sqlalchemy.inspect(self.engine).get_table_names(schema=self.schema)
 
+    def list_views(self) -> list:
+        return sqlalchemy.inspect(self.engine).get_view_names(schema=self.schema)
+
     def create_view(self, layer: str) -> None:
         self.execute(
             f"""
@@ -153,6 +158,27 @@ class PostGIS:
                 WHERE la.name = '{layer}')
             """
         )
+
+    def bbox(self, query: str, geometry_col: str = "geometry"):
+        table = f"({self.clean(query)}) AS query_result"
+        if query in self.list_views():
+            table = f'"{self.schema}"."{query}"'
+        blist = (
+            pandas.read_sql(
+                f"SELECT ST_Extent({geometry_col}) AS bbox_str FROM {table};",
+                self.engine,
+            )
+            .iloc[0, 0]
+            .strip("BOX()")
+            .replace(" ", ",")
+            .split(",")
+        )
+        return {
+            "minx": blist[0],
+            "maxx": blist[1],
+            "miny": blist[2],
+            "maxy": blist[3],
+        }
 
     # def get_or_create(self, model, **kwargs):
     #     instance = self.session.query(model).filter_by(

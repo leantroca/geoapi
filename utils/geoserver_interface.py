@@ -78,6 +78,12 @@ class Geoserver:
         ]
 
     def push_layer(self, layer: str, if_exists: Literal["fail", "replace"] = "fail"):
+        """
+        <nativeName>my_table</nativeName>
+        <title>My Table</title>
+        <abstract>My table description</abstract>
+        <enabled>true</enabled>
+        """
         if if_exists.lower() == "fail" and layer in self.list_layers():
             raise Exception(f"Layer {layer} already exists!")
         response = requests.post(
