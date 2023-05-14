@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Union
 from urllib.parse import urlparse
 
 import requests
@@ -77,7 +77,15 @@ class Geoserver:
             ).json()["layers"]["layer"]
         ]
 
-    def push_layer(self, layer: str, if_exists: Literal["fail", "replace"] = "fail"):
+    def push_layer(
+        self,
+        layer: str,
+        minx: Union[float, str] = "-73.4154357571",
+        maxx: Union[float, str] = "-55.25",
+        miny: Union[float, str] = "-53.628348965",
+        maxy: Union[float, str] = "-21.8323104794",
+        if_exists: Literal["fail", "replace"] = "fail",
+    ):
         """
         <nativeName>my_table</nativeName>
         <title>My Table</title>
@@ -88,8 +96,8 @@ class Geoserver:
             raise Exception(f"Layer {layer} already exists!")
         response = requests.post(
             f"{self.rest_url}/workspaces/{self.workspace}"
-            + "/datastores/{self.datastore}/featuretypes"
-            + "?recalculate=nativebbox,latlonbbox",
+            + f"/datastores/{self.datastore}/featuretypes",
+            # + "?recalculate=nativebbox,latlonbbox",
             auth=(self.username, self.password),
             headers={"Content-type": "text/xml"},
             data=f"""
@@ -98,10 +106,10 @@ class Geoserver:
                   <nativeCRS>{self.coordsys}</nativeCRS>
                   <srs>{self.coordsys}</srs>
                   <nativeBoundingBox>
-                    <minx>-73.4154357571</minx>
-                    <maxx>-55.25</maxx>
-                    <miny>-53.628348965</miny>
-                    <maxy>-21.8323104794</maxy>
+                    <minx>{minx}</minx>
+                    <maxx>{maxx}</maxx>
+                    <miny>{miny}</miny>
+                    <maxy>{maxy}</maxy>
                     <crs>{self.coordsys}</crs>
                   </nativeBoundingBox>
                 </featureType>

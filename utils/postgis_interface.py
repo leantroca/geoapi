@@ -174,10 +174,10 @@ class PostGIS:
             .split(",")
         )
         return {
-            "minx": blist[0],
-            "maxx": blist[1],
-            "miny": blist[2],
-            "maxy": blist[3],
+            "minx": blist[0].strip(),
+            "maxx": blist[1].strip(),
+            "miny": blist[2].strip(),
+            "maxy": blist[3].strip(),
         }
 
     # def get_or_create(self, model, **kwargs):

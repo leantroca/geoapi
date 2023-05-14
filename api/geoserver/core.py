@@ -98,4 +98,7 @@ def ingest_filelike_layer(
     # Create View
     postgis.create_view(layer)
     # Import layer
-    geoserver.push_layer(layer=layer)
+    geoserver.push_layer(
+        layer=layer,
+        **postgis.bbox(layer),
+    )
