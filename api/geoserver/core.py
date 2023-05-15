@@ -10,7 +10,7 @@ from werkzeug.datastructures import FileStorage
 from etc.config import settings
 from models.tables import Geometries, Layers
 from utils.geoserver_interface import Geoserver
-from utils.kml_interface import read_kml
+from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
@@ -72,8 +72,8 @@ def ingest_filelike_layer(
         json=json,
     )
     postgis.session.add(new_layer)
-    for chunk in read_kml(
-        data=file,
+    kml = KML(file=file)
+    for chunk in kml.read_kml(
         chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
     ):
         chunk.columns = map(str.lower, chunk.columns)

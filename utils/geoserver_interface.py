@@ -80,10 +80,10 @@ class Geoserver:
     def push_layer(
         self,
         layer: str,
-        minx: Union[float, str] = "-73.4154357571",
-        maxx: Union[float, str] = "-55.25",
-        miny: Union[float, str] = "-53.628348965",
-        maxy: Union[float, str] = "-21.8323104794",
+        minx: Union[float, str] = -73.4154357571,
+        maxx: Union[float, str] = -55.25,
+        miny: Union[float, str] = -53.628348965,
+        maxy: Union[float, str] = -21.8323104794,
         if_exists: Literal["fail", "replace"] = "fail",
     ):
         """

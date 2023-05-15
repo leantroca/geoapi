@@ -159,7 +159,7 @@ class PostGIS:
             """
         )
 
-    def bbox(self, query: str, geometry_col: str = "geometry"):
+    def bbox(self, query: str, geometry_col: str = "geometry") -> dict:
         table = f"({self.clean(query)}) AS query_result"
         if query in self.list_views():
             table = f'"{self.schema}"."{query}"'
@@ -174,10 +174,10 @@ class PostGIS:
             .split(",")
         )
         return {
-            "minx": blist[0].strip(),
-            "maxx": blist[1].strip(),
-            "miny": blist[2].strip(),
-            "maxy": blist[3].strip(),
+            "minx": float(blist[0].strip()),
+            "maxx": float(blist[1].strip()),
+            "miny": float(blist[2].strip()),
+            "maxy": float(blist[3].strip()),
         }
 
     # def get_or_create(self, model, **kwargs):
