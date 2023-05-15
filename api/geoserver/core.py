@@ -8,7 +8,7 @@ from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
 
 from etc.config import settings
-from models.tables import Geometries, Layers
+from models.tables import Geometries, Layers, Batches, Logs
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
@@ -39,7 +39,7 @@ geoserver = Geoserver()
 
 
 def ingest_filelike_layer(
-    file: Union[FileStorage],
+    file: Union[str, FileStorage],
     layer: str,
     obra: Optional[str] = None,
     operatoria: Optional[str] = None,
@@ -57,6 +57,9 @@ def ingest_filelike_layer(
 ):
     new_layer = Layers(
         name=layer,
+    )
+    new_batch = Batches(
+        layer=new_layer,
         obra=obra,
         operatoria=operatoria,
         provincia=provincia,
@@ -71,7 +74,7 @@ def ingest_filelike_layer(
         fuente=fuente,
         json=json,
     )
-    postgis.session.add(new_layer)
+    postgis.session.add_all([new_batch, new_layer])
     kml = KML(file=file)
     for chunk in kml.read_kml(
         chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
@@ -90,9 +93,17 @@ def ingest_filelike_layer(
                     geometry=parsed_geometry,
                     name=row["name"],
                     description=row["description"],
-                    layer=new_layer,
+                    batch=new_batch,
                 )
             )
+    # Log success.
+    postgis.session.add(
+        Logs(
+            endpoint="/geoserver/kml/import",
+            status="ok",
+            batch=new_batch,
+        ),
+    )
     # Commit geometries
     postgis.session.commit()
     # Create View

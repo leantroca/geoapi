@@ -154,7 +154,8 @@ class PostGIS:
                     ge."name" AS "nombre",
                     ge."geometry" AS "geometry"
                 FROM {self.schema}.layers AS la
-                JOIN {self.schema}.geometries AS ge ON la.id = ge.layer_id
+                    JOIN {self.schema}.batches AS ba ON la.id = ba.layer_id
+                    JOIN {self.schema}.geometries AS ge ON ba.id = ge.batch_id
                 WHERE la.name = '{layer}')
             """
         )

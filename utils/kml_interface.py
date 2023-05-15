@@ -17,11 +17,13 @@ class KML():
     def __init__(
         self,
         file:Union[str, FileStorage],
+        driver:Optional[str]="KML",
         chunksize:Optional[int]=None,
         optional:Optional[dict]={},
         **kwargs,
     ):
-        self._chunksize = chunksize or getattr(settings, "DEFAULT_CHUNKSIZE", None)
+        self._driver = driver
+        self._chunksize = chunksize # or getattr(settings, "DEFAULT_CHUNKSIZE", None)
         optional.update(kwargs)
         self._optional = optional
         if isinstance(file, str):
@@ -43,6 +45,10 @@ class KML():
         return self._path
 
     @property
+    def driver(self) -> str:
+        return self._driver
+
+    @property
     def chunksize(self) -> int:
         return self._chunksize
 
@@ -60,8 +66,9 @@ class KML():
                 setattr(self, f"_{key}", value)
 
     def read_kml(
-        self, chunksize: Optional[int] = None, **kwargs
+        self, driver:Optional[str]=None, chunksize: Optional[int] = None, **kwargs
     ) -> geopandas.GeoDataFrame:
+        driver = driver or self.driver
         chunksize = chunksize if chunksize is not None else self.chunksize
         optional = self.optional.copy()
         optional.update(kwargs)
@@ -71,11 +78,14 @@ class KML():
         else:
             return self.load_kml(**optional)
 
-    def load_kml(self, **kwargs) -> geopandas.GeoDataFrame:
+    def load_kml(self, driver:Optional[str] = None, **kwargs) -> geopandas.GeoDataFrame:
+        driver = driver or self.driver
+        optional = self.optional.copy()
+        optional.update(kwargs)
         load_kml = geopandas.GeoDataFrame(
             pandas.concat(
                 (
-                    geopandas.read_file(path, dirver="KML", layer=folder, **kwargs)
+                    geopandas.read_file(path, driver=driver, layer=folder, **optional)
                     for folder in self.folders
                 ),
                 ignore_index=True,
@@ -83,12 +93,13 @@ class KML():
         )
         return load_kml
 
-    def load_kml_in_chunks(self, chunksize:Optional[int]=None, **kwargs) -> geopandas.GeoDataFrame:
+    def load_kml_in_chunks(self, driver:Optional[str] = None, chunksize:Optional[int]=None, **kwargs) -> geopandas.GeoDataFrame:
+        driver = driver or self.driver
         chunksize = chunksize or self.chunksize
         layer_list = []
         sum_chunks = 0
         for i, folder in enumerate(self.folders):
-            chunk = geopandas.read_file(self.path, dirver="KML", layer=folder, **kwargs)
+            chunk = geopandas.read_file(self.path, driver=driver, layer=folder, **kwargs)
             if chunk.shape[0] + sum_chunks < chunksize:
                 # Chunk will be smaller than chunksize, continue appending.
                 layer_list.append(chunk)
