@@ -9,23 +9,25 @@ from werkzeug.datastructures import FileStorage
 from etc.config import settings
 
 
-class KML():
+class KML:
     """KML file handler."""
+
     fiona.drvsupport.supported_drivers["KML"] = "rw"
     fiona.drvsupport.supported_drivers["LIBKML"] = "rw"
 
     def __init__(
         self,
-        file:Union[str, FileStorage],
-        driver:Optional[str]="KML",
-        chunksize:Optional[int]=None,
-        optional:Optional[dict]={},
+        file: Union[str, FileStorage],
+        driver: Optional[str] = "KML",
+        chunksize: Optional[int] = None,
+        optional: Optional[dict] = {},
         **kwargs,
     ):
         self._driver = driver
-        self._chunksize = chunksize # or getattr(settings, "DEFAULT_CHUNKSIZE", None)
+        self._chunksize = chunksize  # or getattr(settings, "DEFAULT_CHUNKSIZE", None)
         optional.update(kwargs)
         self._optional = optional
+        self._df = None
         if isinstance(file, str):
             self._temp_dir = None
             self._path = file
@@ -38,7 +40,14 @@ class KML():
         raise Exception(f"file {file} of class {type(file)} can't be handled.")
 
     def __del__(self):
-        self._temp_dir.cleanup()
+        if self._temp_dir is not None:
+            self._temp_dir.cleanup()
+
+    @property
+    def temp_dir(self):
+        if self._temp_dir is None:
+            self._temp_dir = tempfile.TemporaryDirectory()
+        return self._temp_dir
 
     @property
     def path(self) -> str:
@@ -66,7 +75,7 @@ class KML():
                 setattr(self, f"_{key}", value)
 
     def read_kml(
-        self, driver:Optional[str]=None, chunksize: Optional[int] = None, **kwargs
+        self, driver: Optional[str] = None, chunksize: Optional[int] = None, **kwargs
     ) -> geopandas.GeoDataFrame:
         driver = driver or self.driver
         chunksize = chunksize if chunksize is not None else self.chunksize
@@ -78,7 +87,9 @@ class KML():
         else:
             return self.load_kml(**optional)
 
-    def load_kml(self, driver:Optional[str] = None, **kwargs) -> geopandas.GeoDataFrame:
+    def load_kml(
+        self, driver: Optional[str] = None, **kwargs
+    ) -> geopandas.GeoDataFrame:
         driver = driver or self.driver
         optional = self.optional.copy()
         optional.update(kwargs)
@@ -93,13 +104,17 @@ class KML():
         )
         return load_kml
 
-    def load_kml_in_chunks(self, driver:Optional[str] = None, chunksize:Optional[int]=None, **kwargs) -> geopandas.GeoDataFrame:
+    def load_kml_in_chunks(
+        self, driver: Optional[str] = None, chunksize: Optional[int] = None, **kwargs
+    ) -> geopandas.GeoDataFrame:
         driver = driver or self.driver
         chunksize = chunksize or self.chunksize
         layer_list = []
         sum_chunks = 0
         for i, folder in enumerate(self.folders):
-            chunk = geopandas.read_file(self.path, driver=driver, layer=folder, **kwargs)
+            chunk = geopandas.read_file(
+                self.path, driver=driver, layer=folder, **kwargs
+            )
             if chunk.shape[0] + sum_chunks < chunksize:
                 # Chunk will be smaller than chunksize, continue appending.
                 layer_list.append(chunk)
@@ -140,3 +155,6 @@ class KML():
                 ignore_index=True,
             ),
         )
+
+
+# https://archivo.minhabitat.gob.ar/archivos/kml/CP_CAT_sanfernandodvcat_bairesdelsur_222viv.kml

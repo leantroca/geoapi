@@ -15,6 +15,8 @@ postgis = PostGIS()
 
 engine = postgis.engine
 
+def clean_nones(kwargs:dict) -> dict:
+	return {key: value for key, value in kwargs.items() if value is not None and value != {}}
 
 def declarative_base(cls):
 	return declarative.declarative_base(
@@ -64,6 +66,26 @@ class Batches(Base):
 	layer_id = Column(Integer, ForeignKey("layers.id"), nullable=True)
 	layer = relationship("Layers", backref="batches")
 
+	@property
+	def record(self):
+		return clean_nones({
+			"id": self.id,
+			"layer": self.layer.name,
+			"obra": self.obra,
+			"operatoria": self.operatoria,
+			"provincia": self.provincia,
+			"departamento": self.departamento,
+			"municipio": self.municipio,
+			"localidad": self.localidad,
+			"estado": self.estado,
+			"descripcion": self.descripcion,
+			"cantidad": self.cantidad,
+			"categoria": self.categoria,
+			"ente": self.ente,
+			"fuente": self.fuente,
+			"json": self.json,
+		})
+
 
 class Geometries(Base):
 	__tablename__ = "geometries"
@@ -88,3 +110,25 @@ class Logs(Base):
 
 	batch_id = Column(Integer, ForeignKey("batches.id"), nullable=True)
 	batch = relationship("Batches", backref="logs")
+
+	def update(self, *args, **kwargs):
+		for key, value in kwargs.items():
+			if hasattr(self, f"{key}"):
+				setattr(self, f"{key}", value)
+
+	@property
+	def status_url(self):
+		if not self.url:
+			self.url = f"http://thisflask.org/status/record/{self.id}"
+		return self.url
+
+	@property
+	def record(self):
+		return clean_nones({
+			"endpoint": self.endpoint,
+			"status": self.status,
+			"message": self.message,
+			"url": self.status_url,
+			"json": self.json,
+			"batch": self.batch.record,
+		})

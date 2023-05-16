@@ -116,3 +116,5 @@ class Geoserver:
             """,
         )
         response.raise_for_status()
+
+# http://localhost:8080/geoserver/rest/workspaces/minhabitat/layers/RE_06.json

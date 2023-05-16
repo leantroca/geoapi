@@ -5,7 +5,7 @@ from flask_restx import Resource
 from werkzeug.utils import secure_filename
 
 from . import namespace
-from .core import ingest_filelike_layer
+from .core import kml_to_create_layer, kml_to_append_layer, keep_track
 from .marshal import import_kml_parser
 
 
@@ -18,7 +18,11 @@ def parse_kwargs(parser):
     }
     body = json.loads(getattr(form, "json") or "{}")
     body.update(
-        **{arg: getattr(form, arg) for arg in unpack if arg != "json" and getattr(form, arg) is not None}
+        **{
+            arg: getattr(form, arg)
+            for arg in unpack
+            if arg != "json" and getattr(form, arg) is not None
+        }
     )
     for arg in unpack:
         kwargs[arg] = body.pop(arg, None)
@@ -26,21 +30,25 @@ def parse_kwargs(parser):
     return {key: value for key, value in kwargs.items() if value is not None}
 
 
-@namespace.route("/kml/import")
-class ImportKML(Resource):
+@namespace.route("/kml/form/create")
+class KMLFormCreate(Resource):
     @namespace.doc("KML File import.")
     # @api.response(201, "Success", response_model)
     # @api.response(400, "Error", response_model)
     # @marshal_with(response_model)
     @namespace.expect(import_kml_parser, validate=True)
     def post(self):
-        kwargs = parse_kwargs(import_kml_parser)
-        ingest_filelike_layer(**kwargs)
-        return str(kwargs)
+        log = keep_track(
+            endpoint="/geoserver/kml/form/create",
+            status="200",
+            message="Received.",
+        )
+        kml_to_create_layer(**parse_kwargs(import_kml_parser), log=log)
+        return (log.record, log.status)
 
 
-@namespace.route("/kml/append")
-class UpdateKML(Resource):
+@namespace.route("/kml/form/append")
+class KMLFormAppend(Resource):
     @namespace.doc("KML File append.")
     # @api.response(201, "Success", response_model)
     # @api.response(400, "Error", response_model)
