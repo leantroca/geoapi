@@ -8,7 +8,7 @@ from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
 
 from etc.config import settings
-from models.tables import Geometries, Layers, Batches, Logs
+from models.tables import Batches, Geometries, Layers, Logs
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
@@ -17,27 +17,7 @@ postgis = PostGIS()
 geoserver = Geoserver()
 
 
-# def load_post_kml(form: ParseResult) -> geopandas.GeoDataFrame:
-#     tablename = layername = form.layer.strip().replace(" ", "_").lower()
-#     rows_appended = 0
-#     postgis.drop_table(tablename, if_not_exists="ignore")
-#     for chunk in read_kml(
-#         data=form.file, chunksize=settings.DEFAULT_CHUNKSIZE, on_bad_lines="skip"
-#     ):
-#         for col in optional_arguments.keys():
-#             chunk[col] = getattr(form, col)
-#         rows_appended += chunk.shape[0]
-#         print(f"[{rows_appended}]: {chunk['geometry']}")
-#         postgis.create_table(
-#             tablename=tablename,
-#             data=chunk,
-#             if_exists="append" if tablename in postgis.list_tables() else "replace",
-#         )
-#         print(f"Table {postgis.schema}.{tablename} created! ({rows_appended})")
-#     geoserver.push_layer(layer=layername)
-#     print(f"Layer {geoserver.workspace}:{layername} created!")
-
-def keep_track(log:Logs=None, **kwargs):
+def keep_track(log: Logs = None, **kwargs):
     if log is None:
         log = Logs()
         postgis.session.add(log)
@@ -61,9 +41,9 @@ def kml_to_create_layer(
     categoria: Optional[str] = None,
     ente: Optional[str] = None,
     fuente: Optional[str] = None,
-    json: Optional[str] = None,
+    json: Optional[dict] = None,
     log: Logs = None,
-):
+) -> None:
     # Update Logs #################
     log = log or Logs()
     log.message = "Processing."
@@ -118,17 +98,15 @@ def kml_to_create_layer(
     postgis.session.commit()
     # Create View
     postgis.create_view(layer)
-    log.message = "PostGIS view created."
+    log.message_append("PostGIS view created.")
     postgis.session.commit()
     # Import layer
     geoserver.push_layer(
         layer=layer,
         **postgis.bbox(layer),
     )
-    log.message = "Geoserver layer created."
+    log.message_append("Geoserver layer created.")
     postgis.session.commit()
-    # Return
-    return log
 
 
 def kml_to_append_layer(
@@ -146,6 +124,26 @@ def kml_to_append_layer(
     categoria: Optional[str] = None,
     ente: Optional[str] = None,
     fuente: Optional[str] = None,
-    json: Optional[str] = None,
-):
+    json: Optional[dict] = None,
+) -> None:
     pass
+
+
+def delete_layer(
+    layer: str,
+    delete_geometries: Optional[bool] = False,
+    json: Optional[dict] = None,
+    log: Optional[Logs] = None,
+) -> None:
+    log = log or Logs()
+    geoserver.delete_layer(layer=layer, if_not_exists="ignore")
+    log.message = "Geoserver layer deleted."
+    postgis.session.commit()
+    postgis.drop_view(layer=layer, if_not_exists="ignore", cascade=True)
+    log.message_append("View deleted.")
+    postgis.session.commit()
+    postgis.drop_layer(layer=layer, if_not_exists="ignore", cascade=delete_geometries)
+    log.message_append(
+        f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
+    )
+    postgis.session.commit()

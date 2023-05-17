@@ -117,4 +117,27 @@ class Geoserver:
         )
         response.raise_for_status()
 
-# http://localhost:8080/geoserver/rest/workspaces/minhabitat/layers/RE_06.json
+    def delete_layer(
+        self,
+        layer: str,
+        if_not_exists: Literal["fail", "ignore"] = "fail",
+    ) -> None:
+        if layer not in self.list_layers():
+            if if_not_exists == "fail":
+                raise Exception(f"Layer '{layer}' doesn't exist!")
+            elif if_not_exists == "ignore":
+                return
+        response = requests.delete(
+            f"{self.rest_url}/layers/{self.workspace}:{layer}.xml",
+            auth=(self.username, self.password),
+        )
+        response.raise_for_status()
+        response = requests.delete(
+            f"{self.rest_url}/workspaces/{self.workspace}/datastores/"
+            + f"{self.datastore}/featuretypes/{layer}.xml",
+            auth=(self.username, self.password),
+        )
+        response.raise_for_status()
+
+
+# http://localhost:8080/geoserver/rest/workspaces/minhabitat/layers.json

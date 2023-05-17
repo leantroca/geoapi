@@ -38,7 +38,7 @@ layer = reqparse.Argument(
     help="Target layer name to be created.",
 )
 
-optional_arguments = {
+kml_arguments = {
     "obra": reqparse.Argument(
         "obra",
         dest="obra",
@@ -132,6 +132,15 @@ optional_arguments = {
     ),
 }
 
+delete_geometries = reqparse.Argument(
+    "delete_geometries",
+    dest="delete_geometries",
+    location="form",
+    type=bool,
+    required=False,
+    default=False,
+)
+
 
 def form_maker(*args):
     request_parser = reqparse.RequestParser()
@@ -143,7 +152,13 @@ def form_maker(*args):
 import_kml_parser = form_maker(
     file,
     layer,
-    *optional_arguments.values(),
+    *kml_arguments.values(),
+)
+
+delete_layer_parser = form_maker(
+    layer,
+    delete_geometries,
+    kml_arguments["json"],
 )
 
 # from . import namespace

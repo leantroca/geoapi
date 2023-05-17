@@ -1,12 +1,11 @@
 import os
 import tempfile
-from typing import Union, Optional
+from typing import Optional, Union
 
 import fiona
 import geopandas
 import pandas
 from werkzeug.datastructures import FileStorage
-from etc.config import settings
 
 
 class KML:
@@ -24,7 +23,7 @@ class KML:
         **kwargs,
     ):
         self._driver = driver
-        self._chunksize = chunksize  # or getattr(settings, "DEFAULT_CHUNKSIZE", None)
+        self._chunksize = chunksize
         optional.update(kwargs)
         self._optional = optional
         self._df = None
@@ -96,7 +95,9 @@ class KML:
         load_kml = geopandas.GeoDataFrame(
             pandas.concat(
                 (
-                    geopandas.read_file(path, driver=driver, layer=folder, **optional)
+                    geopandas.read_file(
+                        self.path, driver=driver, layer=folder, **optional
+                    )
                     for folder in self.folders
                 ),
                 ignore_index=True,
