@@ -42,6 +42,7 @@ def kml_to_create_layer(
     ente: Optional[str] = None,
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
+    error_handle: Optional[str] = "skip",
     log: Logs = None,
 ) -> None:
     # Update Logs #################
@@ -73,6 +74,7 @@ def kml_to_create_layer(
     log.batch = new_batch
     ###############################
     kml = KML(file=file)
+    kml.handle_linear_rings(errors=error_handle)
     for chunk in kml.read_kml(
         chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
     ):

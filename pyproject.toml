@@ -18,6 +18,8 @@ psycopg2 = "^2.9.6"
 sqlalchemy = "^1.4.39"
 alembic = "^1.10.4"
 geoalchemy2 = "^0.10.2"
+beautifulsoup4 = "^4.12.2"
+lxml = "^4.9.2"
 
 
 [build-system]

@@ -1,10 +1,11 @@
 import os
 import tempfile
-from typing import Optional, Union
+from typing import Generator, Literal, Optional, Union
 
 import fiona
 import geopandas
 import pandas
+from bs4 import BeautifulSoup
 from werkzeug.datastructures import FileStorage
 
 
@@ -75,14 +76,13 @@ class KML:
 
     def read_kml(
         self, driver: Optional[str] = None, chunksize: Optional[int] = None, **kwargs
-    ) -> geopandas.GeoDataFrame:
+    ) -> Union[geopandas.GeoDataFrame, Generator[geopandas.GeoDataFrame, None, None]]:
         driver = driver or self.driver
         chunksize = chunksize if chunksize is not None else self.chunksize
         optional = self.optional.copy()
         optional.update(kwargs)
         if chunksize:
-            for chunk in self.load_kml_in_chunks(chunksize=chunksize, **optional):
-                yield chunk
+            return self.load_kml_in_chunks(chunksize=chunksize, **optional)
         else:
             return self.load_kml(**optional)
 
@@ -107,7 +107,7 @@ class KML:
 
     def load_kml_in_chunks(
         self, driver: Optional[str] = None, chunksize: Optional[int] = None, **kwargs
-    ) -> geopandas.GeoDataFrame:
+    ) -> Generator[geopandas.GeoDataFrame, None, None]:
         driver = driver or self.driver
         chunksize = chunksize or self.chunksize
         layer_list = []
@@ -157,36 +157,31 @@ class KML:
             ),
         )
 
-""" 
-# HANDLE LinearRings with less than 4 coordinates into LineStrings
-#
-from bs4 import BeautifulSoup
+    def handle_linear_rings(
+        self, errors: Literal["skip", "drop", "replace"] = "replace"
+    ):
+        if errors == "skip":
+            return
+        with open(self.path, "r") as original_file:
+            xml_data = original_file.read()
+        soup = BeautifulSoup(xml_data, "xml")
+        for linear_ring in soup.find_all("LinearRing"):
+            coordinates = linear_ring.coordinates.string.split()
+            if len(coordinates) < 1 and errors in ["drop", "replace"]:
+                linear_ring.extract()
+                continue
+            if len(coordinates) < 4:
+                if errors == "replace":
+                    coordinates = coordinates + [
+                        coordinates[-1] for _ in range(4 - len(coordinates))
+                    ]
+                    linear_ring.coordinates.string = " ".join(coordinates)
+                if errors == "drop":
+                    linear_ring.extract()
+                    continue
+        self.set(path=os.path.join(self.temp_dir.name, "handle_linear_rings.kml"))
+        with open(self.path, "w") as parsed_file:
+            parsed_file.write(str(soup))
 
-# Parse the XML file
-with open('your_file.xml', 'r') as file:
-    xml_data = file.read()
-
-soup = BeautifulSoup(xml_data, 'xml')
-
-# Find all LinearRing tags
-linear_rings = soup.find_all('LinearRing')
-
-# Modify LinearRing tags to LineString tags
-for linear_ring in linear_rings:
-    # Create a new LineString tag
-    line_string = soup.new_tag('LineString')
-
-    # Copy the coordinates from LinearRing to LineString
-    coordinates = linear_ring.coordinates.string
-    line_string.append(soup.new_tag('coordinates'))
-    line_string.coordinates.string = coordinates
-
-    # Replace LinearRing with LineString
-    linear_ring.replace_with(line_string)
-
-# Save the changes to a new XML file
-with open('updated_file.xml', 'w') as file:
-    file.write(str(soup))
-"""
 
 # https://archivo.minhabitat.gob.ar/archivos/kml/CP_CAT_sanfernandodvcat_bairesdelsur_222viv.kml

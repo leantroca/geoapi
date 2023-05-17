@@ -130,6 +130,15 @@ kml_arguments = {
         type=str,
         required=False,
     ),
+    "error_handle": reqparse.Argument(
+        "error_handle",
+        dest="error_handle",
+        location="form",
+        type=str,
+        required=False,
+        default="skip",
+        choices=["skip", "replace", "drop"],
+    ),
 }
 
 delete_geometries = reqparse.Argument(

@@ -205,6 +205,14 @@ class PostGIS:
             """
         )
 
+    def count_layer_geometries(self, layer: str):
+        return pandas.read_sql(
+            f"""
+            SELECT count(*) FROM {self.schema}."{layer}"
+            """,
+            self.engine,
+        ).iloc[0, 0]
+
     def bbox(self, query: str, geometry_col: str = "geometry") -> dict:
         table = f"({self.clean(query)}) AS query_result"
         if query in self.list_views():
