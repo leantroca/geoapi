@@ -157,5 +157,36 @@ class KML:
             ),
         )
 
+""" 
+# HANDLE LinearRings with less than 4 coordinates into LineStrings
+#
+from bs4 import BeautifulSoup
+
+# Parse the XML file
+with open('your_file.xml', 'r') as file:
+    xml_data = file.read()
+
+soup = BeautifulSoup(xml_data, 'xml')
+
+# Find all LinearRing tags
+linear_rings = soup.find_all('LinearRing')
+
+# Modify LinearRing tags to LineString tags
+for linear_ring in linear_rings:
+    # Create a new LineString tag
+    line_string = soup.new_tag('LineString')
+
+    # Copy the coordinates from LinearRing to LineString
+    coordinates = linear_ring.coordinates.string
+    line_string.append(soup.new_tag('coordinates'))
+    line_string.coordinates.string = coordinates
+
+    # Replace LinearRing with LineString
+    linear_ring.replace_with(line_string)
+
+# Save the changes to a new XML file
+with open('updated_file.xml', 'w') as file:
+    file.write(str(soup))
+"""
 
 # https://archivo.minhabitat.gob.ar/archivos/kml/CP_CAT_sanfernandodvcat_bairesdelsur_222viv.kml
