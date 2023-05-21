@@ -1,5 +1,8 @@
+import json
+
 from flask_restx import reqparse
 from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 
 # # Look only in the POST body
 # parser.add_argument('name', type=int, location='form')
@@ -143,8 +146,8 @@ kml_arguments = {
     ),
 }
 
-json = reqparse.Argument(
-    "json",
+metadata = reqparse.Argument(
+    "metadata",
     dest="json",
     location="form",
     type=str,
@@ -192,7 +195,7 @@ upload_kml_parser = form_maker(
     file,
     layer,
     *kml_arguments.values(),
-    json,
+    metadata,
     kml_error_handle,
 )
 
@@ -200,19 +203,40 @@ download_kml_parser = form_maker(
     url,
     layer,
     *kml_arguments.values(),
-    json,
+    metadata,
     kml_error_handle,
 )
 
 delete_layer_parser = form_maker(
     layer,
     delete_geometries,
-    json,
+    metadata,
     layer_error_handle,
 )
 
-# from . import namespace
 
-# body_model: namespace.model(
-
-# )
+def parse_kwargs(parser):
+    form = parser.parse_args()
+    required = [arg.dest for arg in parser.args if arg.required]
+    optional = [arg.dest for arg in parser.args if not arg.required]
+    kwargs = {
+        "layer": secure_filename(form.layer),
+    }
+    for arg in required:
+        kwargs[arg] = getattr(form, arg)
+    body = json.loads(getattr(form, "json") or "{}")
+    body.update(
+        **{
+            arg: getattr(form, arg)
+            for arg in optional
+            if arg != "json" and getattr(form, arg) is not None
+        }
+    )
+    for arg in optional:
+        kwargs[arg] = body.pop(arg, None)
+    if [arg for arg in parser.args if arg.name == "url"]:
+        kwargs["file"] = [
+            element.strip(" ,\"'[](){{}}") for element in kwargs["file"].split(",")
+        ]
+    kwargs["json"] = body
+    return {key: value for key, value in kwargs.items() if value is not None}

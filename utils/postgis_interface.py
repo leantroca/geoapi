@@ -7,7 +7,7 @@ import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from etc.config import settings
-from models.tables import Layers
+from models.tables import Layers, Logs
 
 
 class PostGIS:
@@ -230,5 +230,8 @@ class PostGIS:
             "maxy": float(blist[3].strip()),
         }
 
-    def get_layer(self, name:str) -> Layers:
+    def get_layer(self, name: str) -> Layers:
         return self.session.query(Layers).filter_by(name=name).first()
+
+    def get_log_record(self, id: int) -> dict:
+        return self.session.query(Logs).get(id).record

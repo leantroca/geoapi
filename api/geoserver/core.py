@@ -1,7 +1,5 @@
 from typing import Optional, Union
 
-# import geopandas
-# from flask_restx.reqparse import ParseResult
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
@@ -12,8 +10,6 @@ from models.tables import Batches, Geometries, Layers, Logs
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
-
-from requests.exceptions import HTTPError, ConnectionError
 
 postgis = PostGIS()
 geoserver = Geoserver()
@@ -142,7 +138,9 @@ def kml_to_append_layer(
         )
     except ValueError as error:
         log.message = str(error)
-        log.message_append("Verify file format. Try using parameter error_handle='replace' or 'drop'.")
+        log.message_append(
+            "Verify file format. Try using parameter error_handle='replace' or 'drop'."
+        )
         log.status = 400
         return
     except Exception as error:
@@ -253,7 +251,9 @@ def delete_layer(
     postgis.drop_view(layer=layer, if_not_exists=layer_error_handle, cascade=True)
     log.message_append("View deleted.")
     postgis.session.commit()
-    postgis.drop_layer(layer=layer, if_not_exists=layer_error_handle, cascade=delete_geometries)
+    postgis.drop_layer(
+        layer=layer, if_not_exists=layer_error_handle, cascade=delete_geometries
+    )
     log.message_append(
         f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
     )

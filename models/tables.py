@@ -1,5 +1,6 @@
-from datetime import datetime
+from urllib.parse import urlparse
 
+import pytz
 from geoalchemy2 import Geometry
 from sqlalchemy import MetaData
 from sqlalchemy.dialects.postgresql import JSON
@@ -10,12 +11,6 @@ from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 
 from etc.config import settings
-
-# from utils.postgis_interface import PostGIS
-
-# postgis = PostGIS()
-
-# engine = postgis.engine
 
 
 def clean_nones(kwargs: dict) -> dict:
@@ -36,15 +31,23 @@ def declarative_base(cls):
 @declarative_base
 class Base(object):
     id = Column(Integer, primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow, server_default=func.now())
+    created_at = Column(
+        DateTime,
+        default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+        server_default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+    )
     updated_at = Column(
         DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        server_default=func.now(),
+        default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+        onupdate=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+        server_default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
         index=True,
     )
     __table_args__ = {"extend_existing": True}
+
+    @property
+    def date(self):
+        return self.created_at.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Layers(Base):
@@ -95,6 +98,7 @@ class Batches(Base):
                 "ente": self.ente,
                 "fuente": self.fuente,
                 "json": self.json,
+                "timestamp": self.date,
             }
         )
 
@@ -147,7 +151,10 @@ class Logs(Base):
                 "endpoint": self.endpoint,
                 "status": self.status,
                 "message": self.message,
-                "url": f"http://thisflask.org/status/record/{self.id}",
+                "url": urlparse(settings.BASE_URL)
+                ._replace(path=f"/status/batch/{self.id}")
+                .geturl(),
+                "timestamp": self.date,
                 "json": self.json,
                 "batch": self.batch.record if self.batch else None,
             }

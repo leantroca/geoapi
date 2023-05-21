@@ -2,11 +2,11 @@ import os
 import re
 import tempfile
 from typing import Generator, Literal, Optional, Union
-import requests
 
 import fiona
 import geopandas
 import pandas
+import requests
 from bs4 import BeautifulSoup
 from werkzeug.datastructures import FileStorage
 

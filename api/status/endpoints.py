@@ -2,6 +2,8 @@ from flask_restx import Namespace, Resource
 
 from utils.geoserver_interface import Geoserver
 
+from .core import get_log_record
+
 geo = Geoserver()
 
 
@@ -13,8 +15,12 @@ namespace = Namespace(
 @namespace.route("/layers")
 class ListLayers(Resource):
     @namespace.doc("List Geoserver Layers.")
-    # @api.response(201, "Success", response_model)
-    # @api.response(400, "Error", response_model)
-    # @marshal_with(response_model)
     def get(self):
         return geo.list_layers()
+
+
+@namespace.route("/batch/<int:id>")
+class ProcessStatus(Resource):
+    @namespace.doc("Process status.")
+    def get(self, id):
+        return get_log_record(id=id)

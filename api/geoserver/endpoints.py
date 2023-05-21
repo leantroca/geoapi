@@ -1,37 +1,15 @@
-import json
-
 from flask_restx import Resource
-from werkzeug.utils import secure_filename
 
 from . import namespace
 from .core import delete_layer, keep_track, kml_to_append_layer, kml_to_create_layer
-from .marshal import delete_layer_parser, upload_kml_parser, download_kml_parser
-
+from .marshal import (
+    delete_layer_parser,
+    download_kml_parser,
+    parse_kwargs,
+    upload_kml_parser,
+)
 
 # TODO: Mover esto a .marshal.
-def parse_kwargs(parser):
-    form = parser.parse_args()
-    required = [arg.dest for arg in parser.args if arg.required]
-    optional = [arg.dest for arg in parser.args if not arg.required]
-    kwargs = {
-        "layer": secure_filename(form.layer),
-    }
-    for arg in required:
-        kwargs[arg] = getattr(form, arg)
-    body = json.loads(getattr(form, "json") or "{}")
-    body.update(
-        **{
-            arg: getattr(form, arg)
-            for arg in optional
-            if arg != "json" and getattr(form, arg) is not None
-        }
-    )
-    for arg in optional:
-        kwargs[arg] = body.pop(arg, None)
-    if [arg for arg in parser.args if arg.name == "url"]:
-        kwargs["file"] = [element.strip(" ,\"\'[](){{}}") for element in kwargs["file"].split(",")]
-    kwargs["json"] = body
-    return {key: value for key, value in kwargs.items() if value is not None}
 
 
 @namespace.route("/kml/form/create")
@@ -67,7 +45,7 @@ class KMLFormAppend(Resource):
 
 
 @namespace.route("/url/form/create")
-class KMLFormCreate(Resource):
+class URLFormCreate(Resource):
     @namespace.doc("KML URL ingest.")
     @namespace.expect(download_kml_parser, validate=True)
     def post(self):
@@ -83,7 +61,7 @@ class KMLFormCreate(Resource):
 
 
 @namespace.route("/url/form/append")
-class KMLFormAppend(Resource):
+class URLFormAppend(Resource):
     @namespace.doc("KML URL append.")
     @namespace.expect(download_kml_parser, validate=True)
     def put(self):
