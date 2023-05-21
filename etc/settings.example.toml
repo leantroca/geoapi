@@ -1,5 +1,7 @@
 [local]
 
+# Crear archivo etc/settings.toml completando los siguientes campos.
+
 # GeoAPI settings
 BASE_URL = "http://localhost:5000/"
 TIMEZONE = "America/Buenos_Aires"
