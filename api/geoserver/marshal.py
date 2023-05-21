@@ -21,7 +21,7 @@ from werkzeug.datastructures import FileStorage
 # https://flask-restx.readthedocs.io/en/latest/api.html#module-flask_restx.reqparse
 
 file = reqparse.Argument(
-    "KML File",
+    "file",
     dest="file",
     location="files",
     type=FileStorage,
@@ -29,8 +29,26 @@ file = reqparse.Argument(
     help="KML file to be imported.",
 )
 
+url = reqparse.Argument(
+    "url",
+    dest="file",
+    location="form",
+    type=str,
+    required=True,
+    help="KML file url to be imported.",
+)
+
+query = reqparse.Argument(
+    "query",
+    dest="file",
+    location="form",
+    type=str,
+    required=True,
+    help="Query to be imported.",
+)
+
 layer = reqparse.Argument(
-    "Target Layer Name",
+    "layer",
     dest="layer",
     location="form",
     type=str,
@@ -123,23 +141,35 @@ kml_arguments = {
         type=str,
         required=False,
     ),
-    "json": reqparse.Argument(
-        "json",
-        dest="json",
-        location="form",
-        type=str,
-        required=False,
-    ),
-    "error_handle": reqparse.Argument(
-        "error_handle",
-        dest="error_handle",
-        location="form",
-        type=str,
-        required=False,
-        default="skip",
-        choices=["skip", "replace", "drop"],
-    ),
 }
+
+json = reqparse.Argument(
+    "json",
+    dest="json",
+    location="form",
+    type=str,
+    required=False,
+)
+
+kml_error_handle = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "replace", "drop"],
+)
+
+layer_error_handle = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "ignore"],
+)
 
 delete_geometries = reqparse.Argument(
     "delete_geometries",
@@ -158,16 +188,27 @@ def form_maker(*args):
     return request_parser
 
 
-import_kml_parser = form_maker(
+upload_kml_parser = form_maker(
     file,
     layer,
     *kml_arguments.values(),
+    json,
+    kml_error_handle,
+)
+
+download_kml_parser = form_maker(
+    url,
+    layer,
+    *kml_arguments.values(),
+    json,
+    kml_error_handle,
 )
 
 delete_layer_parser = form_maker(
     layer,
     delete_geometries,
-    kml_arguments["json"],
+    json,
+    layer_error_handle,
 )
 
 # from . import namespace

@@ -81,6 +81,7 @@ class Batches(Base):
             {
                 "id": self.id,
                 "layer": self.layer.name,
+                "geometries": len(self.geometries),
                 "obra": self.obra,
                 "operatoria": self.operatoria,
                 "provincia": self.provincia,

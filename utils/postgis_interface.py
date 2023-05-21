@@ -193,10 +193,6 @@ class PostGIS:
                     AND ba.layer_id = la.id
                     AND la.name = '{layer}';
                 """
-                # DELETE FROM {self.schema}.batches AS ba,
-                #     USING {self.schema}.layers AS la
-                #     WHERE ba.layer_id = la.id
-                #     AND la.name = '{layer}';
             )
         self.execute(
             f"""
@@ -233,3 +229,6 @@ class PostGIS:
             "miny": float(blist[2].strip()),
             "maxy": float(blist[3].strip()),
         }
+
+    def get_layer(self, name:str) -> Layers:
+        return self.session.query(Layers).filter_by(name=name).first()

@@ -1,6 +1,8 @@
 import os
+import re
 import tempfile
 from typing import Generator, Literal, Optional, Union
+import requests
 
 import fiona
 import geopandas
@@ -17,7 +19,7 @@ class KML:
 
     def __init__(
         self,
-        file: Union[str, FileStorage],
+        file: Union[str, FileStorage, geopandas.GeoDataFrame],
         driver: Optional[str] = "KML",
         chunksize: Optional[int] = None,
         optional: Optional[dict] = {},
@@ -29,13 +31,23 @@ class KML:
         self._optional = optional
         self._df = None
         if isinstance(file, str):
+            if re.match(r"^(http|https)://", file.strip().lower()):
+                self._path = os.path.join(self.temp_dir, "handle.kml")
+                response = requests.get(file)
+                response.raise_for_status()
+                with open(self._path, "wb") as writer:
+                    writer.write(response.content)
+                return
             self._temp_dir = None
             self._path = file
             return
         if isinstance(file, FileStorage):
-            self._temp_dir = tempfile.TemporaryDirectory()
-            self._path = os.path.join(self._temp_dir.name, "handle.kml")
+            self._path = os.path.join(self.temp_dir, "handle.kml")
             file.save(self._path)
+            return
+        if isinstance(file, geopandas.GeoDataFrame):
+            self._path = os.path.join(self.temp_dir, "handle.kml")
+            file.to_file(self.path, driver=self.driver)
             return
         raise Exception(f"file {file} of class {type(file)} can't be handled.")
 
@@ -45,9 +57,9 @@ class KML:
 
     @property
     def temp_dir(self):
-        if self._temp_dir is None:
+        if not hasattr(self, "_temp_dir"):
             self._temp_dir = tempfile.TemporaryDirectory()
-        return self._temp_dir
+        return self._temp_dir.name
 
     @property
     def path(self) -> str:
@@ -158,9 +170,9 @@ class KML:
         )
 
     def handle_linear_rings(
-        self, errors: Literal["skip", "drop", "replace"] = "replace"
+        self, errors: Literal["fail", "drop", "replace"] = "replace"
     ):
-        if errors == "skip":
+        if errors == "fail":
             return
         with open(self.path, "r") as original_file:
             xml_data = original_file.read()
@@ -179,7 +191,7 @@ class KML:
                 if errors == "drop":
                     linear_ring.extract()
                     continue
-        self.set(path=os.path.join(self.temp_dir.name, "handle_linear_rings.kml"))
+        self.set(path=os.path.join(self.temp_dir, "handle_linear_rings.kml"))
         with open(self.path, "w") as parsed_file:
             parsed_file.write(str(soup))
 

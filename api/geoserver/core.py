@@ -13,6 +13,8 @@ from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
 
+from requests.exceptions import HTTPError, ConnectionError
+
 postgis = PostGIS()
 geoserver = Geoserver()
 
@@ -45,16 +47,20 @@ def kml_to_create_layer(
     error_handle: Optional[str] = "skip",
     log: Logs = None,
 ) -> None:
-    # Update Logs #################
-    log = log or Logs()
-    log.message = "Processing."
-    postgis.session.commit()
-    ###############################
+    if not log:
+        log = Logs(message="Processing.", status=200)
+        postgis.session.add(log)
+        postgis.session.commit()
+    if layer in geoserver.list_layers():
+        log.message = f"Layer {layer} already exist."
+        log.status = 400
+        return
     new_layer = Layers(
         name=layer,
     )
-    new_batch = Batches(
-        layer=new_layer,
+    postgis.session.add(new_layer)
+    new_batch = generate_batch(
+        file=file,
         obra=obra,
         operatoria=operatoria,
         provincia=provincia,
@@ -68,35 +74,12 @@ def kml_to_create_layer(
         ente=ente,
         fuente=fuente,
         json=json,
+        error_handle=error_handle,
     )
-    # Update Logs #################
-    postgis.session.add_all([new_batch, new_layer])
+    new_layer.batches.append(new_batch)
+    postgis.session.add(new_batch)
     log.batch = new_batch
-    ###############################
-    kml = KML(file=file)
-    kml.handle_linear_rings(errors=error_handle)
-    for chunk in kml.read_kml(
-        chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
-    ):
-        chunk.columns = map(str.lower, chunk.columns)
-        for _, row in chunk.iterrows():
-            parsed_geometry = (
-                from_shape(row["geometry"], srid=postgis.coordsysid)
-                if row["geometry"].has_z
-                else func.ST_Force3D(
-                    WKTElement(row["geometry"].wkt, srid=postgis.coordsysid)
-                )
-            )
-            postgis.session.add(
-                Geometries(
-                    geometry=parsed_geometry,
-                    name=row["name"],
-                    description=row["description"],
-                    batch=new_batch,
-                )
-            )
     log.message = "PostGIS KML ingested."
-    # Commit geometries
     postgis.session.commit()
     # Create View
     postgis.create_view(layer)
@@ -127,24 +110,150 @@ def kml_to_append_layer(
     ente: Optional[str] = None,
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
+    error_handle: Optional[str] = "skip",
+    log: Logs = None,
 ) -> None:
-    pass
+    if not log:
+        log = Logs(message="Processing.", status=200)
+        postgis.session.add(log)
+        postgis.session.commit()
+    if layer not in geoserver.list_layers():
+        log.message = f"Layer {layer} doesn't exist."
+        log.status = 400
+        return
+    append_layer = postgis.get_layer(name=layer)
+    try:
+        new_batch = generate_batch(
+            file=file,
+            obra=obra,
+            operatoria=operatoria,
+            provincia=provincia,
+            departamento=departamento,
+            municipio=municipio,
+            localidad=localidad,
+            estado=estado,
+            descripcion=descripcion,
+            cantidad=cantidad,
+            categoria=categoria,
+            ente=ente,
+            fuente=fuente,
+            json=json,
+            error_handle=error_handle,
+        )
+    except ValueError as error:
+        log.message = str(error)
+        log.message_append("Verify file format. Try using parameter error_handle='replace' or 'drop'.")
+        log.status = 400
+        return
+    except Exception as error:
+        log.message = str(error)
+        log.status = 400
+        return
+    append_layer.batches.append(new_batch)
+    postgis.session.add(new_batch)
+    log.batch = new_batch
+    log.message = "PostGIS KML ingested."
+    postgis.session.commit()
+    # Create View
+    if layer not in postgis.list_views():
+        postgis.create_view(layer)
+        log.message_append("PostGIS view created.")
+        postgis.session.commit()
+    # Import layer
+    geoserver.delete_layer(
+        layer=layer,
+    )
+    geoserver.push_layer(
+        layer=layer,
+        **postgis.bbox(layer),
+    )
+    log.message_append("Geoserver layer updated.")
+    postgis.session.commit()
+
+
+def generate_batch(
+    file: Union[str, list, FileStorage],
+    obra: Optional[str] = None,
+    operatoria: Optional[str] = None,
+    provincia: Optional[str] = None,
+    departamento: Optional[str] = None,
+    municipio: Optional[str] = None,
+    localidad: Optional[str] = None,
+    estado: Optional[str] = None,
+    descripcion: Optional[str] = None,
+    cantidad: Optional[str] = None,
+    categoria: Optional[str] = None,
+    ente: Optional[str] = None,
+    fuente: Optional[str] = None,
+    json: Optional[dict] = None,
+    error_handle: Optional[str] = "skip",
+    log: Logs = None,
+) -> Batches:
+    generate_batch = Batches(
+        obra=obra,
+        operatoria=operatoria,
+        provincia=provincia,
+        departamento=departamento,
+        municipio=municipio,
+        localidad=localidad,
+        estado=estado,
+        descripcion=descripcion,
+        cantidad=cantidad,
+        categoria=categoria,
+        ente=ente,
+        fuente=fuente,
+        json=json,
+    )
+    if not isinstance(file, list):
+        file = [file]
+    for element in file:
+        kml = KML(file=element)
+        kml.handle_linear_rings(errors=error_handle)
+        for chunk in kml.read_kml(
+            chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
+        ):
+            chunk.columns = map(str.lower, chunk.columns)
+            for _, row in chunk.iterrows():
+                parsed_geometry = (
+                    from_shape(row["geometry"], srid=postgis.coordsysid)
+                    if row["geometry"].has_z
+                    else func.ST_Force3D(
+                        WKTElement(row["geometry"].wkt, srid=postgis.coordsysid)
+                    )
+                )
+                generate_batch.geometries.append(
+                    Geometries(
+                        geometry=parsed_geometry,
+                        name=row["name"],
+                        description=row["description"],
+                    )
+                )
+    return generate_batch
 
 
 def delete_layer(
     layer: str,
     delete_geometries: Optional[bool] = False,
     json: Optional[dict] = None,
+    layer_error_handle: Optional[str] = "ignore",
     log: Optional[Logs] = None,
 ) -> None:
-    log = log or Logs()
-    geoserver.delete_layer(layer=layer, if_not_exists="ignore")
+    if not log:
+        log = Logs(message="Processing.", status=200)
+        postgis.session.add(log)
+        postgis.session.commit()
+    try:
+        geoserver.delete_layer(layer=layer, if_not_exists=layer_error_handle)
+    except Exception as error:
+        log.message = str(error)
+        log.status = 400
+        return
     log.message = "Geoserver layer deleted."
     postgis.session.commit()
-    postgis.drop_view(layer=layer, if_not_exists="ignore", cascade=True)
+    postgis.drop_view(layer=layer, if_not_exists=layer_error_handle, cascade=True)
     log.message_append("View deleted.")
     postgis.session.commit()
-    postgis.drop_layer(layer=layer, if_not_exists="ignore", cascade=delete_geometries)
+    postgis.drop_layer(layer=layer, if_not_exists=layer_error_handle, cascade=delete_geometries)
     log.message_append(
         f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
     )
