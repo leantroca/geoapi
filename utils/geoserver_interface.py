@@ -8,7 +8,7 @@ from etc.config import settings
 
 class Geoserver:
     """
-    An interface for geoserver's REST API interactions.
+    Una interfaz para interactuar con la API REST de Geoserver.
     """
 
     def __init__(
@@ -22,6 +22,20 @@ class Geoserver:
         *args,
         **kwargs,
     ):
+        """
+        Inicializa un objeto Geoserver.
+
+        Args:
+            base_url (str): URL base del servidor Geoserver.
+            username (str): Nombre de usuario para autenticación.
+            password (str): Contraseña para autenticación.
+            workspace (str): Espacio de trabajo de Geoserver.
+            datastore (str): Almacenamiento de datos de Geoserver.
+            coordsys (str): Sistema de coordenadas (por defecto: "EPSG:4326").
+            *args: Argumentos adicionales.
+            **kwargs: Argumentos clave adicionales.
+
+        """
         self._base_url = base_url or settings.__getattribute__("GEOSERVER_BASE_URL")
         self._username = username or settings.__getattribute__("GEOSERVER_USERNAME")
         self._password = password or settings.__getattribute__("GEOSERVER_PASSWORD")
@@ -69,6 +83,13 @@ class Geoserver:
                 setattr(self, f"_{key}", value)
 
     def list_layers(self) -> list:
+        """
+        Obtiene una lista de capas disponibles en Geoserver.
+
+        Returns:
+            list: Lista de nombres de capas.
+
+        """
         return [
             layer["name"]
             for layer in requests.get(
@@ -87,17 +108,32 @@ class Geoserver:
         if_exists: Literal["fail", "replace"] = "fail",
     ):
         """
-        <nativeName>my_table</nativeName>
-        <title>My Table</title>
-        <abstract>My table description</abstract>
-        <enabled>true</enabled>
+        Agrega una capa a Geoserver.
+
+        Args:
+            layer (str): Nombre de la capa.
+            minx (Union[float, str]): Valor mínimo en el eje X (por defecto: -73.4154357571).
+            maxx (Union[float, str]): Valor máximo en el eje X (por defecto: -55.25).
+            miny (Union[float, str]): Valor mínimo en el eje Y (por defecto: -53.628348965).
+            maxy (Union[float, str]): Valor máximo en el eje Y (por defecto: -21.8323104794).
+            if_exists (Literal["fail", "replace"]): Acción a realizar si la capa ya existe
+                (por defecto: "fail").
+
+        Raises:
+            Exception: Si la capa ya existe y se estableció `if_exists` en "fail".
+
+        Otros parámetros:
+            <nativeName>my_table</nativeName>
+            <title>My Table</title>
+            <abstract>My table description</abstract>
+            <enabled>true</enabled>
+
         """
         if if_exists.lower() == "fail" and layer in self.list_layers():
             raise Exception(f"Layer {layer} already exists!")
         response = requests.post(
             f"{self.rest_url}/workspaces/{self.workspace}"
             + f"/datastores/{self.datastore}/featuretypes",
-            # + "?recalculate=nativebbox,latlonbbox",
             auth=(self.username, self.password),
             headers={"Content-type": "text/xml"},
             data=f"""
@@ -122,6 +158,18 @@ class Geoserver:
         layer: str,
         if_not_exists: Literal["fail", "ignore"] = "fail",
     ) -> None:
+        """
+        Elimina una capa de Geoserver.
+
+        Args:
+            layer (str): Nombre de la capa.
+            if_not_exists (Literal["fail", "ignore"]): Acción a realizar si la capa no existe
+                (por defecto: "fail").
+
+        Raises:
+            Exception: Si la capa no existe y se estableció `if_not_exists` en "fail".
+
+        """
         if layer not in self.list_layers():
             if if_not_exists == "fail":
                 raise Exception(f"Layer '{layer}' doesn't exist!")
@@ -138,6 +186,3 @@ class Geoserver:
             auth=(self.username, self.password),
         )
         response.raise_for_status()
-
-
-# http://localhost:8080/geoserver/rest/workspaces/minhabitat/layers.json
