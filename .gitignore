@@ -3,4 +3,4 @@ __pycache__
 *.csv
 *.kml
 settings.toml
-models/alembic/versions/
+models/alembic/versions/*.py
