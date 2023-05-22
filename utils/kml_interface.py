@@ -286,7 +286,8 @@ class KML:
         Maneja los anillos lineales (LinearRings) en el archivo KML.
 
         Args:
-            errors (Literal["fail", "drop", "replace"]): La acción a realizar cuando se encuentren errores en los anillos lineales.
+            errors (Literal["fail", "drop", "replace"]): La acción a realizar cuando se encuentren
+                errores en los anillos lineales.
                 - "fail": Lanza una excepción y falla si se encuentran errores.
                 - "drop": Elimina los anillos lineales con errores.
                 - "replace": Reemplaza las coordenadas faltantes en los anillos lineales con errores.

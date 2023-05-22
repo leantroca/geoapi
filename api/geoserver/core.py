@@ -20,7 +20,8 @@ def keep_track(log: Logs = None, **kwargs):
     Registra y actualiza información de seguimiento en la base de datos.
 
     Args:
-        log (Logs, optional): Registro existente en la base de datos. Si no se proporciona, se creará uno nuevo. Default es None.
+        log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
+            se creará uno nuevo. Default es None.
         **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
 
     Returns:
@@ -57,7 +58,8 @@ def generate_batch(
     Genera un lote de datos a partir de un archivo KML o una lista de archivos KML.
 
     Args:
-        file (Union[str, list, FileStorage]): Ruta de un archivo KML, lista de rutas de archivos KML o un objeto FileStorage.
+        file (Union[str, list, FileStorage]): Ruta de un archivo KML, lista de rutas de archivos KML
+            o un objeto FileStorage.
         obra (Optional[str]): Obra del lote (opcional).
         operatoria (Optional[str]): Operatoria del lote (opcional).
         provincia (Optional[str]): Provincia del lote (opcional).
@@ -71,7 +73,8 @@ def generate_batch(
         ente (Optional[str]): Ente del lote (opcional).
         fuente (Optional[str]): Fuente del lote (opcional).
         json (Optional[dict]): JSON asociado al lote (opcional).
-        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales (opcional, valor por defecto: "skip").
+        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales
+            (opcional, valor por defecto: "skip").
         log (Logs): Objeto Logs existente para mantener un registro de las operaciones (opcional).
 
     Returns:
@@ -158,7 +161,8 @@ def kml_to_create_layer(
         ente (Optional[str]): Ente asociado a la capa (opcional).
         fuente (Optional[str]): Fuente asociada a la capa (opcional).
         json (Optional[dict]): JSON asociado a la capa (opcional).
-        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales (opcional, valor por defecto: "skip").
+        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales
+            (opcional, valor por defecto: "skip").
         log (Logs): Objeto Logs existente para mantener un registro de las operaciones (opcional).
 
     Returns:
@@ -250,7 +254,8 @@ def kml_to_append_layer(
         ente (Optional[str]): Ente asociado a la capa (opcional).
         fuente (Optional[str]): Fuente asociada a la capa (opcional).
         json (Optional[dict]): JSON asociado a la capa (opcional).
-        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales (opcional, valor por defecto: "skip").
+        error_handle (Optional[str]): Manejo de errores al procesar los anillos lineales
+            (opcional, valor por defecto: "skip").
         log (Logs): Objeto Logs existente para mantener un registro de las operaciones (opcional).
 
     Returns:
@@ -327,9 +332,11 @@ def delete_layer(
 
     Args:
         layer (str): Nombre de la capa a eliminar.
-        delete_geometries (Optional[bool]): Indica si se deben eliminar también las geometrías de la capa en PostGIS (opcional, valor por defecto: False).
+        delete_geometries (Optional[bool]): Indica si se deben eliminar también las geometrías de la capa
+            en PostGIS (opcional, valor por defecto: False).
         json (Optional[dict]): JSON asociado a la capa (opcional).
-        layer_error_handle (Optional[str]): Manejo de errores al eliminar la capa en GeoServer (opcional, valor por defecto: "ignore").
+        layer_error_handle (Optional[str]): Manejo de errores al eliminar la capa en GeoServer
+            (opcional, valor por defecto: "ignore").
         log (Optional[Logs]): Objeto Logs existente para mantener un registro de las operaciones (opcional).
 
     Returns:

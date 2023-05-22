@@ -48,7 +48,7 @@ class KMLFormCreate(Resource):
             Datos de solicitud inválidos. (Solicitud incorrecta)
           500:
             Error interno del servidor. (Error del servidor interno)
-        """        
+        """
         kwargs = parse_kwargs(upload_kml_parser)
         log = keep_track(
             endpoint="/geoserver/kml/form/create",

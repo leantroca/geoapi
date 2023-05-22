@@ -79,6 +79,7 @@ class Layers(Base):
         __tablename__ (str): Nombre de la tabla en la base de datos.
         name (Column): Columna de tipo String que representa el nombre de la capa.
     """
+
     __tablename__ = "layers"
 
     name = Column(String, nullable=False, unique=True)
@@ -108,6 +109,7 @@ class Batches(Base):
         record (property): Propiedad que devuelve un diccionario con los campos relevantes del lote.
 
     """
+
     __tablename__ = "batches"
 
     obra = Column(String, nullable=True, default=None)
@@ -124,7 +126,9 @@ class Batches(Base):
     fuente = Column(String, nullable=True, default=None)
     json = Column(JSON, nullable=True, default=None)
 
-    layer_id = Column(Integer, ForeignKey("layers.id", ondelete="SET NULL"), nullable=True)
+    layer_id = Column(
+        Integer, ForeignKey("layers.id", ondelete="SET NULL"), nullable=True
+    )
     layer = relationship("Layers", backref="batches")
 
     @property
@@ -173,6 +177,7 @@ class Geometries(Base):
         batch (relationship): Relación con la tabla de lotes (Batches).
 
     """
+
     __tablename__ = "geometries"
 
     geometry = Column(
@@ -187,7 +192,9 @@ class Geometries(Base):
     description = Column(String, nullable=True, default=None)
     json = Column(JSON, nullable=True, default=None)
 
-    batch_id = Column(Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True)
+    batch_id = Column(
+        Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True
+    )
     batch = relationship("Batches", backref="geometries")
 
 
@@ -210,6 +217,7 @@ class Logs(Base):
         message_append (method): Método que agrega un mensaje adicional al mensaje existente.
 
     """
+
     __tablename__ = "logs"
 
     endpoint = Column(String, nullable=True, default=None)
@@ -219,7 +227,9 @@ class Logs(Base):
     url = Column(String, nullable=True, default=None)
     json = Column(JSON, nullable=True, default=None)
 
-    batch_id = Column(Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True)
+    batch_id = Column(
+        Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True
+    )
     batch = relationship("Batches", backref="logs")
 
     def update(self, *args, **kwargs):
