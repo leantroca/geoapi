@@ -90,12 +90,16 @@ class Geoserver:
             list: Lista de nombres de capas.
 
         """
+        response = requests.get(
+            f"{self.rest_url}/workspaces/{self.workspace}/layers.json",
+            auth=(self.username, self.password)
+        )
+        response.raise_for_status()
+        if not (isinstance(response.json().get("layers"), dict) and "layer" in response.json()["layers"]):
+            return []
         return [
             layer["name"]
-            for layer in requests.get(
-                f"{self.rest_url}/workspaces/{self.workspace}/layers.json",
-                auth=(self.username, self.password),
-            ).json()["layers"]["layer"]
+            for layer in response.json()["layers"]["layer"]
         ]
 
     def push_layer(
