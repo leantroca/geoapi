@@ -23,31 +23,30 @@ class KMLFormCreate(Resource):
     def post(self):
         """
         Importa un archivo KML para crear una capa en GeoServer.
+        
         ---
         parameters:
-          - file (requerido)
-          - layer (requerido)
-          - obra
-          - operatoria
-          - provincia
-          - departamento
-          - municipio
-          - localidad
-          - estado
-          - descripcion
-          - cantidad
-          - categoria
-          - ente
-          - fuente
-          - metadata
-          - error_handle
+          - file (requerido): El archivo KML a importar.
+          - layer (requerido): El nombre de la capa de destino donde se creará la capa.
+          - obra: Descripción de la obra.
+          - operatoria: Descripción de la operatoria.
+          - provincia: Nombre de la provincia.
+          - departamento: Nombre del departamento.
+          - municipio: Nombre del municipio.
+          - localidad: Nombre de la localidad.
+          - estado: Estado.
+          - descripcion: Descripción.
+          - cantidad: Cantidad.
+          - categoria: Categoría.
+          - ente: Ente.
+          - fuente: Fuente.
+          - metadata: Metadatos.
+          - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ---
         responses:
-          200:
-            Importación exitosa. (OK)
-          400:
-            Datos de solicitud inválidos. (Solicitud incorrecta)
-          500:
-            Error interno del servidor. (Error del servidor interno)
+          - 200: Importación exitosa. (OK)
+          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - 500: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = keep_track(
@@ -92,13 +91,11 @@ class KMLFormAppend(Resource):
           - fuente: Fuente.
           - metadata: Metadatos.
           - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ---
         responses:
-          200:
-            Importación exitosa.
-          400:
-            Datos de solicitud inválidos.
-          500:
-            Error interno del servidor.
+          - 200: Importación exitosa. (OK)
+          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - 500: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = keep_track(
@@ -143,13 +140,11 @@ class URLFormCreate(Resource):
           - fuente: Fuente.
           - metadata: Metadatos.
           - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ---
         responses:
-          200:
-            Importación exitosa.
-          400:
-            Datos de solicitud inválidos.
-          500:
-            Error interno del servidor.
+          - 200: Importación exitosa. (OK)
+          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - 500: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = keep_track(
@@ -194,13 +189,11 @@ class URLFormAppend(Resource):
           - fuente: Fuente.
           - metadata: Metadatos.
           - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ---
         responses:
-          200:
-            Agregado exitoso.
-          400:
-            Datos de solicitud inválidos.
-          500:
-            Error interno del servidor.
+          - 200: Importación exitosa. (OK)
+          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - 500: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = keep_track(
@@ -233,13 +226,11 @@ class DeleteLayer(Resource):
           - delete_geometries: Indica si se deben eliminar también las geometrías asociadas (opciones: True, False).
           - metadata: Metadatos de la capa.
           - error_handle: Manejo de errores (opciones: "fail", "ignore").
+        ---
         responses:
-          200:
-            Capa eliminada exitosamente.
-          400:
-            Datos de solicitud inválidos.
-          500:
-            Error interno del servidor.
+          - 200: Importación exitosa. (OK)
+          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - 500: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_layer_parser)
         log = keep_track(

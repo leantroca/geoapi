@@ -231,8 +231,20 @@ class PostGIS:
             f"""
             CREATE OR REPLACE VIEW {self.schema}."{layer}" AS (
                 SELECT
-                    la."name" AS "layer",
                     ge."name" AS "nombre",
+                    ba."obra" AS "obra",
+                    ba."operatoria" AS "operatoria",
+                    ba."provincia" AS "provincia",
+                    ba."departamento" AS "departamento",
+                    ba."municipio" AS "municipio",
+                    ba."localidad" AS "localidad",
+                    ba."estado" AS "estado",
+                    ba."descripcion" AS "descripción",
+                    ba."cantidad" AS "cantidad",
+                    ba."categoria" AS "categoría",
+                    ba."ente" AS "ente",
+                    ba."fuente" AS "fuente",
+                    la."name" AS "layer",
                     ge."geometry" AS "geometry"
                 FROM {self.schema}.layers AS la
                     JOIN {self.schema}.batches AS ba ON la.id = ba.layer_id
