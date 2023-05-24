@@ -77,6 +77,18 @@ class Geoserver:
     def coordsys(self) -> str:
         return self._coordsys
 
+    @property
+    def status(self) -> bool:
+        try:
+            response = requests.get(
+                f"{self.rest_url}/about/system-status",
+                auth=(self.username, self.password)
+            )
+            response.raise_for_status()
+            return True
+        except Exception:
+            return False
+
     def set(self, **kwargs) -> None:
         for key, value in kwargs.items():
             if hasattr(self, f"_{key}"):

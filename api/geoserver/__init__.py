@@ -1,10 +1,10 @@
 from flask_restx import Namespace
 from utils.geoserver_interface import Geoserver
 
-geo = Geoserver()
+geoserver = Geoserver()
 
 
 namespace = Namespace(
     "Geoserver",
-    description=f"Endpoints for managing layers in {geo.hostname}.",
+    description=f"Endpoints para administrar capas en Geoserver ({geoserver.hostname}) {'&#9989;' if geoserver.status else '&#9940;'}.",
 )
