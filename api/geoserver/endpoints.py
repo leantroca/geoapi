@@ -25,28 +25,28 @@ class KMLFormCreate(Resource):
         Importa un archivo KML para crear una capa en GeoServer.
         
         ---
-        parameters:
-          - file (requerido): El archivo KML a importar.
-          - layer (requerido): El nombre de la capa de destino donde se creará la capa.
-          - obra: Descripción de la obra.
-          - operatoria: Descripción de la operatoria.
-          - provincia: Nombre de la provincia.
-          - departamento: Nombre del departamento.
-          - municipio: Nombre del municipio.
-          - localidad: Nombre de la localidad.
-          - estado: Estado.
-          - descripcion: Descripción.
-          - cantidad: Cantidad.
-          - categoria: Categoría.
-          - ente: Ente.
-          - fuente: Fuente.
-          - metadata: Metadatos.
-          - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ### parameters:
+          - __file__ (requerido): El archivo KML a importar.
+          - __layer__ (requerido): El nombre de la capa de destino donde se creará la capa.
+          - __obra__: Descripción de la obra.
+          - __operatoria__: Descripción de la operatoria.
+          - __provincia__: Nombre de la provincia.
+          - __departamento__: Nombre del departamento.
+          - __municipio__: Nombre del municipio.
+          - __localidad__: Nombre de la localidad.
+          - __estado__: Estado.
+          - __descripcion__: Descripción.
+          - __cantidad__: Cantidad.
+          - __categoria__: Categoría.
+          - __ente__: Ente.
+          - __fuente__: Fuente.
+          - __metadata__: Metadatos.
+          - __error_handle__: Manejo de errores (opciones: "fail", "replace", "drop").
         ---
-        responses:
-          - 200: Importación exitosa. (OK)
-          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
-          - 500: Error interno del servidor. (Error del servidor interno)
+        ### responses:
+          - __200__: Importación exitosa. (OK)
+          - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = keep_track(
@@ -74,28 +74,28 @@ class KMLFormAppend(Resource):
         Importa un archivo KML al sistema y lo agrega a una capa existente.
 
         ---
-        parameters:
-          - file (requerido): El archivo KML a importar.
-          - layer (requerido): El nombre de la capa de destino donde se agregará el archivo KML.
-          - obra: Descripción de la obra.
-          - operatoria: Descripción de la operatoria.
-          - provincia: Nombre de la provincia.
-          - departamento: Nombre del departamento.
-          - municipio: Nombre del municipio.
-          - localidad: Nombre de la localidad.
-          - estado: Estado.
-          - descripcion: Descripción.
-          - cantidad: Cantidad.
-          - categoria: Categoría.
-          - ente: Ente.
-          - fuente: Fuente.
-          - metadata: Metadatos.
-          - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ### parameters:
+          - __file__ (requerido): El archivo KML a importar.
+          - __layer__ (requerido): El nombre de la capa de destino donde se agregará el archivo KML.
+          - __obra__: Descripción de la obra.
+          - __operatoria__: Descripción de la operatoria.
+          - __provincia__: Nombre de la provincia.
+          - __departamento__: Nombre del departamento.
+          - __municipio__: Nombre del municipio.
+          - __localidad__: Nombre de la localidad.
+          - __estado__: Estado.
+          - __descripcion__: Descripción.
+          - __cantidad__: Cantidad.
+          - __categoria__: Categoría.
+          - __ente__: Ente.
+          - __fuente__: Fuente.
+          - __metadata__: Metadatos.
+          - __error_handle__: Manejo de errores (opciones: "fail", "replace", "drop").
         ---
-        responses:
-          - 200: Importación exitosa. (OK)
-          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
-          - 500: Error interno del servidor. (Error del servidor interno)
+        ### responses:
+          - __200__: Importación exitosa. (OK)
+          - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = keep_track(
@@ -123,28 +123,28 @@ class URLFormCreate(Resource):
         Importa archivos KML desde URLs y crea una capa en GeoServer.
 
         ---
-        parameters:
-          - url (requerido): La URL o URLs separadas por comas de los archivos KML a importar.
-          - layer (requerido): El nombre de la capa de destino donde se creará la capa.
-          - obra: Descripción de la obra.
-          - operatoria: Descripción de la operatoria.
-          - provincia: Nombre de la provincia.
-          - departamento: Nombre del departamento.
-          - municipio: Nombre del municipio.
-          - localidad: Nombre de la localidad.
-          - estado: Estado.
-          - descripcion: Descripción.
-          - cantidad: Cantidad.
-          - categoria: Categoría.
-          - ente: Ente.
-          - fuente: Fuente.
-          - metadata: Metadatos.
-          - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ### parameters:
+          - __url__ (requerido): La URL o URLs separadas por comas de los archivos KML a importar.
+          - __layer__ (requerido): El nombre de la capa de destino donde se creará la capa.
+          - __obra__: Descripción de la obra.
+          - __operatoria__: Descripción de la operatoria.
+          - __provincia__: Nombre de la provincia.
+          - __departamento__: Nombre del departamento.
+          - __municipio__: Nombre del municipio.
+          - __localidad__: Nombre de la localidad.
+          - __estado__: Estado.
+          - __descripcion__: Descripción.
+          - __cantidad__: Cantidad.
+          - __categoria__: Categoría.
+          - __ente__: Ente.
+          - __fuente__: Fuente.
+          - __metadata__: Metadatos.
+          - __error_handle__: Manejo de errores (opciones: "fail", "replace", "drop").
         ---
-        responses:
-          - 200: Importación exitosa. (OK)
-          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
-          - 500: Error interno del servidor. (Error del servidor interno)
+        ### responses:
+          - __200__: Importación exitosa. (OK)
+          - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = keep_track(
@@ -172,28 +172,28 @@ class URLFormAppend(Resource):
         Agrega archivos KML desde URLs a una capa existente en GeoServer.
 
         ---
-        parameters:
-          - url (requerido): La URL o URLs separadas por comas de los archivos KML a agregar.
-          - layer (requerido): El nombre de la capa de destino donde se agregarán los datos.
-          - obra: Descripción de la obra.
-          - operatoria: Descripción de la operatoria.
-          - provincia: Nombre de la provincia.
-          - departamento: Nombre del departamento.
-          - municipio: Nombre del municipio.
-          - localidad: Nombre de la localidad.
-          - estado: Estado.
-          - descripcion: Descripción.
-          - cantidad: Cantidad.
-          - categoria: Categoría.
-          - ente: Ente.
-          - fuente: Fuente.
-          - metadata: Metadatos.
-          - error_handle: Manejo de errores (opciones: "fail", "replace", "drop").
+        ### parameters:
+          - __url__ (requerido): La URL o URLs separadas por comas de los archivos KML a agregar.
+          - __layer__ (requerido): El nombre de la capa de destino donde se agregarán los datos.
+          - __obra__: Descripción de la obra.
+          - __operatoria__: Descripción de la operatoria.
+          - __provincia__: Nombre de la provincia.
+          - __departamento__: Nombre del departamento.
+          - __municipio__: Nombre del municipio.
+          - __localidad__: Nombre de la localidad.
+          - __estado__: Estado.
+          - __descripcion__: Descripción.
+          - __cantidad__: Cantidad.
+          - __categoria__: Categoría.
+          - __ente__: Ente.
+          - __fuente__: Fuente.
+          - __metadata__: Metadatos.
+          - __error_handle__: Manejo de errores (opciones: "fail", "replace", "drop").
         ---
-        responses:
-          - 200: Importación exitosa. (OK)
-          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
-          - 500: Error interno del servidor. (Error del servidor interno)
+        ### responses:
+          - __200__: Importación exitosa. (OK)
+          - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = keep_track(
@@ -221,16 +221,16 @@ class DeleteLayer(Resource):
         Elimina una capa y sus datos asociados en GeoServer.
 
         ---
-        parameters:
-          - layer (requerido): El nombre de la capa a eliminar.
-          - delete_geometries: Indica si se deben eliminar también las geometrías asociadas (opciones: True, False).
-          - metadata: Metadatos de la capa.
-          - error_handle: Manejo de errores (opciones: "fail", "ignore").
+        ### parameters:
+          - __layer__ (requerido): El nombre de la capa a eliminar.
+          - __delete_geometries__: Indica si se deben eliminar también las geometrías asociadas (opciones: True, False).
+          - __metadata__: Metadatos de la capa.
+          - __error_handle__: Manejo de errores (opciones: "fail", "ignore").
         ---
-        responses:
-          - 200: Importación exitosa. (OK)
-          - 400: Datos de solicitud inválidos. (Solicitud incorrecta)
-          - 500: Error interno del servidor. (Error del servidor interno)
+        ### responses:
+          - __200__: Importación exitosa. (OK)
+          - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
+          - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_layer_parser)
         log = keep_track(

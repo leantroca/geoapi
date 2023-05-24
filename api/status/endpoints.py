@@ -22,11 +22,9 @@ class ListLayers(Resource):
         Obtiene la lista de capas disponibles en Geoserver.
 
         ---
-        responses:
-          200:
-            Listado de capas obtenido correctamente.
-          500:
-            Error interno del servidor.
+        ### responses: 
+          - __200__: Registro de estado obtenido correctamente.
+          - __500__: Error interno del servidor.
         """
         return geoserver.list_layers()
 
@@ -45,12 +43,10 @@ class ProcessStatus(Resource):
         Obtiene el registro de estado de un proceso por su ID.
 
         ---
-        parameters:
-          - id (requerido): ID del proceso.
-        responses:
-          200:
-            Registro de estado obtenido correctamente.
-          500:
-            Error interno del servidor.
+        ### parameters:
+          - __id__ (requerido): ID del proceso.
+        ### responses: 
+          - __200__: Registro de estado obtenido correctamente.
+          - __500__: Error interno del servidor.
         """
         return get_log_record(id=id)
