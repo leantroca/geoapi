@@ -1,15 +1,11 @@
-from flask_restx import Namespace, Resource
+from flask_restx import Resource
 
 from utils.geoserver_interface import Geoserver
 
+from . import namespace
 from .core import get_log_record
 
-geo = Geoserver()
-
-
-namespace = Namespace(
-    "Status", description=f"Endpoints para consultar el estado de {geo.hostname}."
-)
+geoserver = Geoserver()
 
 
 @namespace.route("/layers")
@@ -32,7 +28,7 @@ class ListLayers(Resource):
           500:
             Error interno del servidor.
         """
-        return geo.list_layers()
+        return geoserver.list_layers()
 
 
 @namespace.route("/batch/<int:id>")
