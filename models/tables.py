@@ -2,7 +2,7 @@ from urllib.parse import urlparse
 
 import pytz
 from geoalchemy2 import Geometry
-from sqlalchemy import MetaData
+from sqlalchemy import MetaData, event
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import relationship
@@ -232,6 +232,11 @@ class Logs(Base):
     )
     batch = relationship("Batches", backref="logs")
 
+    def __init__(self):
+        Base.__init__(self)
+        self.url = urlparse(settings.BASE_URL)._replace(path=f"/status/batch/{self.id}").geturl()
+
+
     def update(self, *args, **kwargs):
         """
         Actualiza los valores de los atributos con los valores proporcionados en kwargs.
@@ -244,6 +249,9 @@ class Logs(Base):
         for key, value in kwargs.items():
             if hasattr(self, f"{key}"):
                 setattr(self, f"{key}", value)
+
+    def get_url(self):
+        return urlparse(settings.BASE_URL)._replace(path=f"/status/batch/{self.id}").geturl() if self.id else None
 
     @property
     def record(self):
@@ -259,9 +267,7 @@ class Logs(Base):
                 "endpoint": self.endpoint,
                 "status": self.status,
                 "message": self.message,
-                "url": urlparse(settings.BASE_URL)
-                ._replace(path=f"/status/batch/{self.id}")
-                .geturl(),
+                "url": self.url, # or self.get_url,
                 "timestamp": self.date,
                 "json": self.json,
                 "batch": self.batch.record if self.batch else None,
@@ -277,3 +283,8 @@ class Logs(Base):
 
         """
         self.message = ". ".join([self.message.strip(". "), message.strip(". ")]) + "."
+
+
+@event.listens_for(Logs, 'before_update')
+def autoupdate_logs(mapper, connection, log):
+    log.url = log.get_url()
