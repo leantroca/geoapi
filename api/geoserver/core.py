@@ -324,7 +324,7 @@ def delete_layer(
     layer: str,
     delete_geometries: Optional[bool] = False,
     json: Optional[dict] = None,
-    layer_error_handle: Optional[str] = "ignore",
+    error_handle: Optional[str] = "ignore",
     log: Optional[Logs] = None,
 ) -> None:
     """
@@ -335,7 +335,7 @@ def delete_layer(
         delete_geometries (Optional[bool]): Indica si se deben eliminar también las geometrías de la capa
             en PostGIS (opcional, valor por defecto: False).
         json (Optional[dict]): JSON asociado a la capa (opcional).
-        layer_error_handle (Optional[str]): Manejo de errores al eliminar la capa en GeoServer
+        error_handle (Optional[str]): Manejo de errores al eliminar la capa en GeoServer
             (opcional, valor por defecto: "ignore").
         log (Optional[Logs]): Objeto Logs existente para mantener un registro de las operaciones (opcional).
 
@@ -348,18 +348,18 @@ def delete_layer(
         postgis.session.add(log)
         postgis.session.commit()
     try:
-        geoserver.delete_layer(layer=layer, if_not_exists=layer_error_handle)
+        geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
     except Exception as error:
         log.message = str(error)
         log.status = 400
         return
     log.message = "Geoserver layer deleted."
     postgis.session.commit()
-    postgis.drop_view(layer=layer, if_not_exists=layer_error_handle, cascade=True)
+    postgis.drop_view(layer=layer, if_not_exists=error_handle, cascade=True)
     log.message_append("View deleted.")
     postgis.session.commit()
     postgis.drop_layer(
-        layer=layer, if_not_exists=layer_error_handle, cascade=delete_geometries
+        layer=layer, if_not_exists=error_handle, cascade=delete_geometries
     )
     log.message_append(
         f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
