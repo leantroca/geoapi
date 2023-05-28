@@ -384,6 +384,9 @@ class PostGIS:
         """
         return self.session.query(Layers).filter_by(name=name).first()
 
+    def get_log(self, id: int) -> Logs:
+        return self.session.query(Logs).get(id)
+
     def get_log_record(self, id: int) -> dict:
         """
         Obtiene el registro de un registro de registro de la base de datos.
@@ -394,4 +397,4 @@ class PostGIS:
         Returns:
             dict: Registro correspondiente al ID proporcionado.
         """
-        return getattr(self.session.query(Logs).get(id), "record", None)
+        return getattr(self.get_log(id=id), "record", None)

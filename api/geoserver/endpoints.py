@@ -1,13 +1,21 @@
 from flask_restx import Resource
 
 from . import namespace
-from .core import delete_layer, keep_track, kml_to_append_layer, kml_to_create_layer
+from .core import (
+    debug_metadata,
+    keep_track,
+    temp_remove,
+    temp_store,
+    verify_layer_exists,
+    verify_layer_not_exists,
+)
 from .marshal import (
     delete_layer_parser,
     download_kml_parser,
     parse_kwargs,
     upload_kml_parser,
 )
+from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_create_layer
 
 
 class EndpointServer(Resource):
@@ -60,7 +68,18 @@ class KMLFormCreate(EndpointServer):
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = self.logger(**kwargs)
-        kml_to_create_layer(**kwargs, log=log)
+        try:
+            kwargs["file"] = temp_store(kwargs["file"])
+            verify_layer_not_exists(kwargs["layer"])
+            task_kml_to_create_layer.delay(**kwargs, log=log.id)
+        except ValueError as error:
+            keep_track(
+                log=log,
+                status=400,
+                message=str(error),
+                json=debug_metadata(**kwargs),
+            )
+            temp_remove(kwargs["file"])
         return (log.record, log.status)
 
 
@@ -104,7 +123,18 @@ class KMLFormAppend(EndpointServer):
         """
         kwargs = parse_kwargs(upload_kml_parser)
         log = self.logger(**kwargs)
-        kml_to_append_layer(**kwargs, log=log)
+        try:
+            kwargs["file"] = temp_store(kwargs["file"])
+            verify_layer_exists(kwargs["layer"])
+            task_kml_to_append_layer.delay(**kwargs, log=log.id)
+        except ValueError as error:
+            keep_track(
+                log=log,
+                status=400,
+                message=str(error),
+                json=debug_metadata(**kwargs),
+            )
+            temp_remove(kwargs["file"])
         return (log.record, log.status)
 
 
@@ -148,7 +178,18 @@ class URLFormCreate(EndpointServer):
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = self.logger(**kwargs)
-        kml_to_create_layer(**kwargs, log=log)
+        try:
+            kwargs["file"] = temp_store(kwargs["file"])
+            verify_layer_not_exists(kwargs["layer"])
+            task_kml_to_create_layer.delay(**kwargs, log=log.id)
+        except ValueError as error:
+            keep_track(
+                log=log,
+                status=400,
+                message=str(error),
+                json=debug_metadata(**kwargs),
+            )
+            temp_remove(kwargs["file"])
         return (log.record, log.status)
 
 
@@ -192,7 +233,18 @@ class URLFormAppend(EndpointServer):
         """
         kwargs = parse_kwargs(download_kml_parser)
         log = self.logger(**kwargs)
-        kml_to_append_layer(**kwargs, log=log)
+        try:
+            kwargs["file"] = temp_store(kwargs["file"])
+            verify_layer_exists(kwargs["layer"])
+            task_kml_to_append_layer.delay(**kwargs, log=log.id)
+        except ValueError as error:
+            keep_track(
+                log=log,
+                status=400,
+                message=str(error),
+                json=debug_metadata(**kwargs),
+            )
+            temp_remove(kwargs["file"])
         return (log.record, log.status)
 
 
@@ -224,5 +276,5 @@ class DeleteLayer(EndpointServer):
         """
         kwargs = parse_kwargs(delete_layer_parser)
         log = self.logger(**kwargs)
-        delete_layer(**kwargs, log=log)
+        task_delete_layer.delay(**kwargs, log=log.id)
         return (log.record, log.status)

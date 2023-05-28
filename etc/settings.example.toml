@@ -26,3 +26,7 @@ POSTGIS_PASS = "password"
 POSTGIS_DATABASE = "postgis"
 POSTGIS_SCHEMA = "public"
 POSTGIS_DRIVER = "postgresql+psycopg2"
+
+# CELERY Settings
+CELERY_BROKER = "redis://localhost:6379/0"
+TEMP_BASE = "/tmp"

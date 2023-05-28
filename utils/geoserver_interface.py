@@ -146,7 +146,7 @@ class Geoserver:
 
         """
         if if_exists.lower() == "fail" and layer in self.list_layers():
-            raise Exception(f"Layer {layer} already exists!")
+            raise ValueError(f"Layer {layer} already exists!")
         response = requests.post(
             f"{self.rest_url}/workspaces/{self.workspace}"
             + f"/datastores/{self.datastore}/featuretypes",
@@ -188,7 +188,7 @@ class Geoserver:
         """
         if layer not in self.list_layers():
             if if_not_exists == "fail":
-                raise Exception(f"Layer '{layer}' doesn't exist!")
+                raise ValueError(f"Layer '{layer}' doesn't exist!")
             elif if_not_exists == "ignore":
                 return
         response = requests.delete(

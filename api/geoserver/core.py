@@ -1,9 +1,11 @@
+import os
 from typing import Optional, Union
 
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 
 from etc.config import settings
 from models.tables import Batches, Geometries, Layers, Logs, clean_nones
@@ -17,17 +19,24 @@ geoserver = Geoserver()
 
 def core_exception_logger(target):
     def wrapper(*args, **kwargs):
+        log = kwargs.get("log") or keep_track()
+        if isinstance(log, int):
+            log = postgis.get_log(id=log)
+        kwargs["log"] = log
         try:
-            return target(*args, **kwargs)
+            return target(**kwargs)
         except Exception as error:
-            log = kwargs.get("log")
-            if log:
+            if isinstance(error, ValueError):
                 log.status = 400
                 log.message = str(error)
                 log.json = debug_metadata(**kwargs)
                 postgis.session.commit()
-                return
-            raise error
+            else:
+                log.status = 500
+                log.message = str(error)
+                log.json = debug_metadata(**kwargs)
+                postgis.session.commit()
+                raise error
 
     return wrapper
 
@@ -35,14 +44,16 @@ def core_exception_logger(target):
 def debug_metadata(**kwargs) -> dict:
     return clean_nones(
         {
-            key: value if key not in ["file"] else str(value)
+            key: value
+            if key not in ["file"]
+            else str([os.path.basename(element) for element in value])
             for key, value in kwargs.items()
             if key not in ["log"]
         }
     )
 
 
-def keep_track(log: Logs = None, **kwargs):
+def keep_track(log: Union[int, Logs] = None, **kwargs):
     """
     Registra y actualiza información de seguimiento en la base de datos.
 
@@ -58,6 +69,9 @@ def keep_track(log: Logs = None, **kwargs):
     if log is None:
         log = Logs()
         postgis.session.add(log)
+    if isinstance(log, int):
+        log = postgis.get_log(id=log)
+    postgis.session.flush()
     log.update(**kwargs)
     postgis.session.commit()
     return log
@@ -79,7 +93,7 @@ def generate_batch(
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "skip",
-    log: Logs = None,
+    log: Union[int, Logs] = None,
 ) -> Batches:
     """
     Genera un lote de datos a partir de un archivo KML o una lista de archivos KML.
@@ -108,6 +122,8 @@ def generate_batch(
         Batches: Objeto Batches que contiene los datos del lote generado.
 
     """
+    if isinstance(log, int):
+        log = postgis.get_log(id=log)
     generate_batch = Batches(
         obra=obra,
         operatoria=operatoria,
@@ -383,3 +399,34 @@ def delete_layer(
         f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
     )
     postgis.session.commit()
+
+
+def temp_store(file: Union[str, list]) -> str:
+    """TBD"""
+    if not isinstance(file, list):
+        file = [file]
+    for i, element in enumerate(file):
+        if isinstance(element, FileStorage):
+            file[i] = os.path.join(
+                settings.TEMP_BASE, f"{i:04d}_{secure_filename(element.filename)}"
+            )
+            element.save(file[i])
+    return file
+
+
+def temp_remove(file: Union[str, list]) -> None:
+    """TBD"""
+    if not isinstance(file, list):
+        file = [file]
+    for element in file:
+        if isinstance(element, str) and os.path.dirname(element).startswith(
+            settings.TEMP_BASE
+        ):
+            try:
+                os.remove(element)
+            except OSError:
+                pass
+
+
+def get_log(id: Union[int, Logs]):
+    return postgis.get_log(id=id) if isinstance(id, int) else id

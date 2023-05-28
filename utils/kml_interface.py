@@ -1,7 +1,7 @@
 import os
 import re
 import tempfile
-from typing import Generator, Literal, Optional, Union
+from typing import Generator, Literal, Optional, Type, Union
 
 import fiona
 import geopandas
@@ -19,7 +19,7 @@ class KML:
 
     def __init__(
         self,
-        file: Union[str, FileStorage, geopandas.GeoDataFrame],
+        file: Union[str, FileStorage, geopandas.GeoDataFrame, Type["KML"]],
         driver: Optional[str] = "KML",
         chunksize: Optional[int] = None,
         optional: Optional[dict] = {},
@@ -64,6 +64,10 @@ class KML:
             self._path = os.path.join(self.temp_dir, "handle.kml")
             file.to_file(self.path, driver=self.driver)
             return
+        if self.isselfinstance(file):
+            self._temp_dir = None
+            self._path = file.path
+            return
         raise Exception(f"file {file} of class {type(file)} can't be handled.")
 
     def __del__(self):
@@ -74,6 +78,10 @@ class KML:
 
         if self._temp_dir is not None:
             self._temp_dir.cleanup()
+
+    @classmethod
+    def isselfinstance(cls, obj):
+        return isinstance(obj, cls)
 
     @property
     def temp_dir(self):

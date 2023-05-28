@@ -236,7 +236,7 @@ class Logs(Base):
         Base.__init__(self)
         self.url = (
             urlparse(settings.BASE_URL)
-            ._replace(path=f"/status/batch/{self.id}")
+            ._replace(path=f"/status/record/{self.id}")
             .geturl()
         )
 
@@ -252,6 +252,8 @@ class Logs(Base):
         for key, value in kwargs.items():
             if hasattr(self, f"{key}"):
                 setattr(self, f"{key}", value)
+            if key == "append_message":
+                self.message_append(value)
 
     def get_url(self):
         return (
