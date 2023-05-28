@@ -10,8 +10,18 @@ from .marshal import (
 )
 
 
+class EndpointServer(Resource):
+    def logger(self, *args, **kwargs):
+        return keep_track(
+            endpoint=self.endpoint.replace("_", "/").lower(),
+            layer=kwargs["layer"],
+            status=200,
+            message="Received.",
+        )
+
+
 @namespace.route("/kml/form/create")
-class KMLFormCreate(Resource):
+class KMLFormCreate(EndpointServer):
     """
     KML File ingest.
 
@@ -23,7 +33,7 @@ class KMLFormCreate(Resource):
     def post(self):
         """
         Importa un archivo KML para crear una capa en GeoServer.
-        
+
         ---
         ### parameters:
           - __file__ (requerido): El archivo KML a importar.
@@ -49,18 +59,13 @@ class KMLFormCreate(Resource):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
-        log = keep_track(
-            endpoint="/geoserver/kml/form/create",
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-        )
+        log = self.logger(**kwargs)
         kml_to_create_layer(**kwargs, log=log)
         return (log.record, log.status)
 
 
 @namespace.route("/kml/form/append")
-class KMLFormAppend(Resource):
+class KMLFormAppend(EndpointServer):
     """
     KML File append.
 
@@ -98,18 +103,13 @@ class KMLFormAppend(Resource):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
-        log = keep_track(
-            endpoint="/geoserver/kml/form/append",
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-        )
+        log = self.logger(**kwargs)
         kml_to_append_layer(**kwargs, log=log)
         return (log.record, log.status)
 
 
 @namespace.route("/url/form/create")
-class URLFormCreate(Resource):
+class URLFormCreate(EndpointServer):
     """
     KML URL ingest.
 
@@ -147,18 +147,13 @@ class URLFormCreate(Resource):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
-        log = keep_track(
-            endpoint="/geoserver/url/form/create",
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-        )
+        log = self.logger(**kwargs)
         kml_to_create_layer(**kwargs, log=log)
         return (log.record, log.status)
 
 
 @namespace.route("/url/form/append")
-class URLFormAppend(Resource):
+class URLFormAppend(EndpointServer):
     """
     KML URL append.
 
@@ -196,18 +191,13 @@ class URLFormAppend(Resource):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(download_kml_parser)
-        log = keep_track(
-            endpoint="/geoserver/kml/form/append",
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-        )
+        log = self.logger(**kwargs)
         kml_to_append_layer(**kwargs, log=log)
         return (log.record, log.status)
 
 
 @namespace.route("/layer/form/delete")
-class DeleteLayer(Resource):
+class DeleteLayer(EndpointServer):
     """
     Eliminación de capa completa.
 
@@ -233,11 +223,6 @@ class DeleteLayer(Resource):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_layer_parser)
-        log = keep_track(
-            endpoint="/geoserver/layer/form/delete",
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-        )
+        log = self.logger(**kwargs)
         delete_layer(**kwargs, log=log)
         return (log.record, log.status)

@@ -394,4 +394,4 @@ class PostGIS:
         Returns:
             dict: Registro correspondiente al ID proporcionado.
         """
-        return self.session.query(Logs).get(id).record
+        return getattr(self.session.query(Logs).get(id), "record", None)

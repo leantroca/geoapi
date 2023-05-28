@@ -82,7 +82,7 @@ class Geoserver:
         try:
             response = requests.get(
                 f"{self.rest_url}/about/system-status",
-                auth=(self.username, self.password)
+                auth=(self.username, self.password),
             )
             response.raise_for_status()
             return True
@@ -104,15 +104,15 @@ class Geoserver:
         """
         response = requests.get(
             f"{self.rest_url}/workspaces/{self.workspace}/layers.json",
-            auth=(self.username, self.password)
+            auth=(self.username, self.password),
         )
         response.raise_for_status()
-        if not (isinstance(response.json().get("layers"), dict) and "layer" in response.json()["layers"]):
+        if not (
+            isinstance(response.json().get("layers"), dict)
+            and "layer" in response.json()["layers"]
+        ):
             return []
-        return [
-            layer["name"]
-            for layer in response.json()["layers"]["layer"]
-        ]
+        return [layer["name"] for layer in response.json()["layers"]["layer"]]
 
     def push_layer(
         self,

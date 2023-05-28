@@ -239,7 +239,7 @@ delete_geometries = reqparse.Argument(
     location="form",
     type=bool,
     required=False,
-    default=False,
+    default=True,
 )
 
 

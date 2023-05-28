@@ -3,7 +3,7 @@ from flask_restx import Resource
 from utils.geoserver_interface import Geoserver
 
 from . import namespace
-from .core import get_log_record
+from .core import get_log_record, standard_response
 
 geoserver = Geoserver()
 
@@ -22,14 +22,14 @@ class ListLayers(Resource):
         Obtiene la lista de capas disponibles en Geoserver.
 
         ---
-        ### responses: 
+        ### responses:
           - __200__: Registro de estado obtenido correctamente.
           - __500__: Error interno del servidor.
         """
-        return geoserver.list_layers()
+        return {"layers": geoserver.list_layers()}
 
 
-@namespace.route("/batch/<int:id>")
+@namespace.route("/record/<int:id>")
 class ProcessStatus(Resource):
     """
     Estado del proceso.
@@ -45,8 +45,13 @@ class ProcessStatus(Resource):
         ---
         ### parameters:
           - __id__ (requerido): ID del proceso.
-        ### responses: 
+        ### responses:
           - __200__: Registro de estado obtenido correctamente.
           - __500__: Error interno del servidor.
         """
-        return get_log_record(id=id)
+        return get_log_record(id=id) or standard_response(
+            id=id,
+            endpoint=self.endpoint.replace("_", "/").lower(),
+            status=400,
+            message=f"Record '{id}' doesn't exist.",
+        )

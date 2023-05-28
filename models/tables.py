@@ -1,3 +1,4 @@
+from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
@@ -14,9 +15,7 @@ from etc.config import settings
 
 
 def clean_nones(kwargs: dict) -> dict:
-    return {
-        key: value for key, value in kwargs.items() if value is not None and value != {}
-    }
+    return {key: value for key, value in kwargs.items() if value not in [None, {}]}
 
 
 def declarative_base(cls):
@@ -47,14 +46,14 @@ class Base(object):
     id = Column(Integer, primary_key=True)
     created_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
-        server_default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+        default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
+        server_default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
     )
     updated_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
-        onupdate=func.now(tz=pytz.timezone("America/Buenos_Aires")),
-        server_default=func.now(tz=pytz.timezone("America/Buenos_Aires")),
+        default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
+        onupdate=func.now(tz=pytz.timezone(settings.TIMEZONE)),
+        server_default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
         index=True,
     )
     __table_args__ = {"extend_existing": True}
@@ -68,7 +67,8 @@ class Base(object):
             str: Fecha de creación de la entidad.
 
         """
-        return self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = self.created_at or datetime.now(pytz.timezone(settings.TIMEZONE))
+        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Layers(Base):
@@ -222,7 +222,7 @@ class Logs(Base):
 
     endpoint = Column(String, nullable=True, default=None)
     layer = Column(String, nullable=True, default=None)
-    status = Column(String, nullable=True, default=None)
+    status = Column(Integer, nullable=True, default=None)
     message = Column(String, nullable=True, default=None)
     url = Column(String, nullable=True, default=None)
     json = Column(JSON, nullable=True, default=None)
@@ -234,8 +234,11 @@ class Logs(Base):
 
     def __init__(self):
         Base.__init__(self)
-        self.url = urlparse(settings.BASE_URL)._replace(path=f"/status/batch/{self.id}").geturl()
-
+        self.url = (
+            urlparse(settings.BASE_URL)
+            ._replace(path=f"/status/batch/{self.id}")
+            .geturl()
+        )
 
     def update(self, *args, **kwargs):
         """
@@ -251,7 +254,13 @@ class Logs(Base):
                 setattr(self, f"{key}", value)
 
     def get_url(self):
-        return urlparse(settings.BASE_URL)._replace(path=f"/status/batch/{self.id}").geturl() if self.id else None
+        return (
+            urlparse(settings.BASE_URL)
+            ._replace(path=f"/status/record/{self.id}")
+            .geturl()
+            if self.id
+            else None
+        )
 
     @property
     def record(self):
@@ -267,9 +276,9 @@ class Logs(Base):
                 "endpoint": self.endpoint,
                 "status": self.status,
                 "message": self.message,
-                "url": self.url, # or self.get_url,
+                "url": self.url,  # or self.get_url,
                 "timestamp": self.date,
-                "json": self.json,
+                "metadata": self.json,
                 "batch": self.batch.record if self.batch else None,
             }
         )
@@ -285,6 +294,6 @@ class Logs(Base):
         self.message = ". ".join([self.message.strip(". "), message.strip(". ")]) + "."
 
 
-@event.listens_for(Logs, 'before_update')
+@event.listens_for(Logs, "before_update")
 def autoupdate_logs(mapper, connection, log):
     log.url = log.get_url()

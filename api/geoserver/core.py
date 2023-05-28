@@ -6,13 +6,40 @@ from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
 
 from etc.config import settings
-from models.tables import Batches, Geometries, Layers, Logs
+from models.tables import Batches, Geometries, Layers, Logs, clean_nones
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
 geoserver = Geoserver()
+
+
+def core_exception_logger(target):
+    def wrapper(*args, **kwargs):
+        try:
+            return target(*args, **kwargs)
+        except Exception as error:
+            log = kwargs.get("log")
+            if log:
+                log.status = 400
+                log.message = str(error)
+                log.json = debug_metadata(**kwargs)
+                postgis.session.commit()
+                return
+            raise error
+
+    return wrapper
+
+
+def debug_metadata(**kwargs) -> dict:
+    return clean_nones(
+        {
+            key: value if key not in ["file"] else str(value)
+            for key, value in kwargs.items()
+            if key not in ["log"]
+        }
+    )
 
 
 def keep_track(log: Logs = None, **kwargs):
@@ -101,28 +128,53 @@ def generate_batch(
     for element in file:
         kml = KML(file=element)
         kml.handle_linear_rings(errors=error_handle)
-        for chunk in kml.read_kml(
-            chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
-        ):
-            chunk.columns = map(str.lower, chunk.columns)
-            for _, row in chunk.iterrows():
-                parsed_geometry = (
-                    from_shape(row["geometry"], srid=postgis.coordsysid)
-                    if row["geometry"].has_z
-                    else func.ST_Force3D(
-                        WKTElement(row["geometry"].wkt, srid=postgis.coordsysid)
+        try:
+            for chunk in kml.read_kml(
+                chunksize=settings.DEFAULT_CHUNKSIZE,  # on_bad_lines="skip"
+            ):
+                chunk.columns = map(str.lower, chunk.columns)
+                for _, row in chunk.iterrows():
+                    parsed_geometry = (
+                        from_shape(row["geometry"], srid=postgis.coordsysid)
+                        if row["geometry"].has_z
+                        else func.ST_Force3D(
+                            WKTElement(row["geometry"].wkt, srid=postgis.coordsysid)
+                        )
                     )
-                )
-                generate_batch.geometries.append(
-                    Geometries(
-                        geometry=parsed_geometry,
-                        name=row["name"],
-                        description=row["description"],
+                    generate_batch.geometries.append(
+                        Geometries(
+                            geometry=parsed_geometry,
+                            name=row["name"],
+                            description=row["description"],
+                        )
                     )
+        except ValueError as error:
+            raise ValueError(
+                ". ".join(
+                    [
+                        str(error).rstrip(". "),
+                        "Verify file format. Try using parameter error_handle='replace' or 'drop'.",
+                    ]
                 )
+            )
     return generate_batch
 
 
+def verify_layer_exists(layer: str):
+    if layer not in geoserver.list_layers():
+        raise ValueError(f"Layer {layer} doesn't exist on Geoserver.")
+    if layer not in postgis.list_layers():
+        raise ValueError(f"Layer {layer} doesn't exist on Postgis.")
+
+
+def verify_layer_not_exists(layer: str):
+    if layer in geoserver.list_layers():
+        raise ValueError(f"Layer '{layer}' already exists on Geoserver.")
+    if layer in postgis.list_layers():
+        raise ValueError(f"Layer '{layer}' already exists on Postgis.")
+
+
+@core_exception_logger
 def kml_to_create_layer(
     file: Union[str, FileStorage],
     layer: str,
@@ -169,14 +221,8 @@ def kml_to_create_layer(
         None
 
     """
-    if not log:
-        log = Logs(message="Processing.", status=200)
-        postgis.session.add(log)
-        postgis.session.commit()
-    if layer in geoserver.list_layers():
-        log.message = f"Layer {layer} already exist."
-        log.status = 400
-        return
+    log = log or Logs()
+    verify_layer_not_exists(layer=layer)
     new_layer = Layers(
         name=layer,
     )
@@ -216,6 +262,7 @@ def kml_to_create_layer(
     postgis.session.commit()
 
 
+@core_exception_logger
 def kml_to_append_layer(
     file: Union[str, FileStorage],
     layer: str,
@@ -262,53 +309,31 @@ def kml_to_append_layer(
         None
 
     """
-    if not log:
-        log = Logs(message="Processing.", status=200)
-        postgis.session.add(log)
-        postgis.session.commit()
-    if layer not in geoserver.list_layers():
-        log.message = f"Layer {layer} doesn't exist."
-        log.status = 400
-        return
+    log = log or Logs()
+    verify_layer_exists(layer=layer)
     append_layer = postgis.get_layer(name=layer)
-    try:
-        new_batch = generate_batch(
-            file=file,
-            obra=obra,
-            operatoria=operatoria,
-            provincia=provincia,
-            departamento=departamento,
-            municipio=municipio,
-            localidad=localidad,
-            estado=estado,
-            descripcion=descripcion,
-            cantidad=cantidad,
-            categoria=categoria,
-            ente=ente,
-            fuente=fuente,
-            json=json,
-            error_handle=error_handle,
-        )
-    except ValueError as error:
-        log.message = str(error)
-        log.message_append(
-            "Verify file format. Try using parameter error_handle='replace' or 'drop'."
-        )
-        log.status = 400
-        return
-    except Exception as error:
-        log.message = str(error)
-        log.status = 400
-        return
+    new_batch = generate_batch(
+        file=file,
+        obra=obra,
+        operatoria=operatoria,
+        provincia=provincia,
+        departamento=departamento,
+        municipio=municipio,
+        localidad=localidad,
+        estado=estado,
+        descripcion=descripcion,
+        cantidad=cantidad,
+        categoria=categoria,
+        ente=ente,
+        fuente=fuente,
+        json=json,
+        error_handle=error_handle,
+    )
     append_layer.batches.append(new_batch)
     postgis.session.add(new_batch)
     log.batch = new_batch
     log.message = "PostGIS KML ingested."
     postgis.session.commit()
-    if layer not in postgis.list_views():
-        postgis.create_view(layer)
-        log.message_append("PostGIS view created.")
-        postgis.session.commit()
     geoserver.delete_layer(
         layer=layer,
     )
@@ -320,6 +345,7 @@ def kml_to_append_layer(
     postgis.session.commit()
 
 
+@core_exception_logger
 def delete_layer(
     layer: str,
     delete_geometries: Optional[bool] = False,
@@ -343,16 +369,8 @@ def delete_layer(
         None
 
     """
-    if not log:
-        log = Logs(message="Processing.", status=200)
-        postgis.session.add(log)
-        postgis.session.commit()
-    try:
-        geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
-    except Exception as error:
-        log.message = str(error)
-        log.status = 400
-        return
+    log = log or Logs()
+    geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
     log.message = "Geoserver layer deleted."
     postgis.session.commit()
     postgis.drop_view(layer=layer, if_not_exists=error_handle, cascade=True)
