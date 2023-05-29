@@ -68,7 +68,7 @@ class Base(object):
 
         """
         timestamp = self.created_at or datetime.now(pytz.timezone(settings.TIMEZONE))
-        return timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        return timestamp.astimezone(pytz.timezone(settings.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 class Layers(Base):
@@ -278,7 +278,7 @@ class Logs(Base):
                 "endpoint": self.endpoint,
                 "status": self.status,
                 "message": self.message,
-                "url": self.url,  # or self.get_url,
+                "url": self.url,
                 "timestamp": self.date,
                 "metadata": self.json,
                 "batch": self.batch.record if self.batch else None,
