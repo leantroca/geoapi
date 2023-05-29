@@ -8,7 +8,8 @@ LISTEN_TO = "127.0.0.1"
 DEBUG = True
 
 # Data settings
-TIMEZONE = "America/Buenos_Aires"
+SERVER_TIMEZONE = "UTC"
+USER_TIMEZONE = "America/Buenos_Aires"
 COORDINATE_SYSTEM = "EPSG:4326"
 DEFAULT_CHUNKSIZE = 50
 
