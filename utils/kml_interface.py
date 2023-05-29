@@ -324,6 +324,3 @@ class KML:
         self.set(path=os.path.join(self.temp_dir, "handle_linear_rings.kml"))
         with open(self.path, "w") as parsed_file:
             parsed_file.write(str(soup))
-
-
-# https://archivo.minhabitat.gob.ar/archivos/kml/CP_CAT_sanfernandodvcat_bairesdelsur_222viv.kml

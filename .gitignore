@@ -2,5 +2,7 @@ __pycache__
 *.txt
 *.csv
 *.kml
+*.out
 settings.toml
 models/alembic/versions/*.py
+poetry.lock
