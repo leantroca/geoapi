@@ -46,14 +46,14 @@ class Base(object):
     id = Column(Integer, primary_key=True)
     created_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
-        server_default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
+        default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
+        server_default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
     )
     updated_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
-        onupdate=func.now(tz=pytz.timezone(settings.TIMEZONE)),
-        server_default=func.now(tz=pytz.timezone(settings.TIMEZONE)),
+        default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
+        onupdate=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
+        server_default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
         index=True,
     )
     __table_args__ = {"extend_existing": True}
@@ -67,8 +67,8 @@ class Base(object):
             str: Fecha de creación de la entidad.
 
         """
-        timestamp = self.created_at or datetime.now(pytz.timezone(settings.TIMEZONE))
-        return timestamp.astimezone().strftime("%Y-%m-%d %H:%M:%S GMT%Z")
+        timestamp = self.created_at or datetime.now(pytz.timezone(settings.SERVER_TIMEZONE))
+        return timestamp.astimezone(pytz.timezone(settings.USER_TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S GMT%Z")
 
 
 class Layers(Base):
