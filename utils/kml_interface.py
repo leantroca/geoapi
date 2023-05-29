@@ -92,7 +92,7 @@ class KML:
             str: Ruta del directorio temporal.
 
         """
-        if not hasattr(self, "_temp_dir"):
+        if getattr(self, "_temp_dir", None) is None:
             self._temp_dir = tempfile.TemporaryDirectory()
         return self._temp_dir.name
 
