@@ -68,7 +68,7 @@ class Base(object):
 
         """
         timestamp = self.created_at or datetime.now(pytz.timezone(settings.TIMEZONE))
-        return timestamp.astimezone(pytz.timezone(settings.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
+        return timestamp.astimezone(pytz.timezone(settings.TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S GMT%Z")
 
 
 class Layers(Base):
