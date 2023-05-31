@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
@@ -43,23 +43,44 @@ class Base(object):
 
     """
 
+    __table_args__ = {"extend_existing": True}
+    stz = pytz.timezone(settings.POSTGIS_TIMEZONE)
+    ctz = pytz.timezone(settings.CLIENT_TIMEZONE)
+
     id = Column(Integer, primary_key=True)
     created_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
-        server_default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
+        default=func.now(tz=stz),
+        server_default=func.now(tz=stz),
     )
     updated_at = Column(
         DateTime,
-        default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
-        onupdate=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
-        server_default=func.now(tz=pytz.timezone(settings.SERVER_TIMEZONE)),
+        default=func.now(tz=stz),
+        onupdate=func.now(tz=stz),
+        server_default=func.now(tz=stz),
         index=True,
     )
-    __table_args__ = {"extend_existing": True}
 
     @property
-    def date(self):
+    def created(self):
+        """
+        Afirma que las fechas del servidor estén expresadas condiderando timezones.
+        """
+        if self.created_at:
+            return self.stz.localize(self.created_at)
+        return self.created_at
+
+    @property
+    def updated(self):
+        """
+        Afirma que las fechas del servidor estén expresadas condiderando timezones.
+        """
+        if self.updated_at:
+            return self.stz.localize(self.updated_at)
+        return self.updated_at
+
+    @property
+    def timestamp(self):
         """
         Devuelve la fecha de creación de la entidad en formato "%Y-%m-%d %H:%M:%S".
 
@@ -67,10 +88,10 @@ class Base(object):
             str: Fecha de creación de la entidad.
 
         """
-        # TODO: Este parche usando el timedelta no debería quedar así. El servidor
-        #  de postgres usa los valores UTC como si fueran GMT-3. [Leo]
-        timestamp = self.created_at + timedelta(hours=-3) or datetime.now(pytz.timezone(settings.SERVER_TIMEZONE))
-        return timestamp.astimezone(pytz.timezone(settings.SERVER_TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S GMT%Z")
+        timestamp = self.created or datetime.now(tz=self.stz)
+        return timestamp.astimezone(self.ctz).strftime(
+            f"%Y-%m-%d %H:%M:%S ({self.ctz.zone} UTC%Z)"
+        )
 
 
 class Layers(Base):
@@ -277,7 +298,7 @@ class Logs(Base):
                 "status": self.status,
                 "message": self.message,
                 "url": self.url,
-                "timestamp": self.date,
+                "timestamp": self.timestamp,
                 "metadata": self.json,
                 "batch": self.batch.record if self.batch else None,
             }

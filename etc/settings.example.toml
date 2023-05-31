@@ -8,8 +8,7 @@ LISTEN_TO = "127.0.0.1"
 DEBUG = True
 
 # Data settings
-SERVER_TIMEZONE = "UTC"
-USER_TIMEZONE = "America/Buenos_Aires"
+CLIENT_TIMEZONE = "America/Argentina/Buenos_Aires"
 COORDINATE_SYSTEM = "EPSG:4326"
 DEFAULT_CHUNKSIZE = 50
 
@@ -27,6 +26,7 @@ POSTGIS_PASS = "password"
 POSTGIS_DATABASE = "postgis"
 POSTGIS_SCHEMA = "public"
 POSTGIS_DRIVER = "postgresql+psycopg2"
+POSTGIS_TIMEZONE = "UTC"
 
 # CELERY Settings
 CELERY_BROKER = "redis://localhost:6379/0"
