@@ -103,6 +103,7 @@ class PostGIS:
     def engine(self) -> sqlalchemy.engine.Engine:
         if not self._engine:
             self.create_engine()
+            # self._engine.execution_options = {"options": "-c timezone=utc"}
         return self._engine
 
     @property

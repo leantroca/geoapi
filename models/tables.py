@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
 import pytz
@@ -67,8 +67,10 @@ class Base(object):
             str: Fecha de creación de la entidad.
 
         """
-        timestamp = self.created_at or datetime.now(pytz.timezone(settings.SERVER_TIMEZONE))
-        return timestamp.astimezone(pytz.timezone(settings.USER_TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S GMT%Z")
+        # TODO: Este parche usando el timedelta no debería quedar así. El servidor
+        #  de postgres usa los valores UTC como si fueran GMT-3. [Leo]
+        timestamp = self.created_at + timedelta(hours=-3) or datetime.now(pytz.timezone(settings.SERVER_TIMEZONE))
+        return timestamp.astimezone(pytz.timezone(settings.SERVER_TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S GMT%Z")
 
 
 class Layers(Base):
@@ -234,11 +236,7 @@ class Logs(Base):
 
     def __init__(self):
         Base.__init__(self)
-        self.url = (
-            urlparse(settings.BASE_URL)
-            ._replace(path=f"/status/record/{self.id}")
-            .geturl()
-        )
+        self.url = self.get_url()
 
     def update(self, *args, **kwargs):
         """
