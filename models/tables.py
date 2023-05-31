@@ -181,7 +181,7 @@ class Batches(Base):
                 "ente": self.ente,
                 "fuente": self.fuente,
                 "json": self.json,
-                "timestamp": self.date,
+                "timestamp": self.timestamp,
             }
         )
 
