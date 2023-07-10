@@ -7,7 +7,7 @@ import requests
 
 
 class SLD:
-    """TBD"""
+    """Interfaz para archivos SLD."""
 
     def __init__(
         self,

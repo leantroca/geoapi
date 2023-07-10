@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 
 
 class KML:
-    """Manejador de archivos KML."""
+    """Interfaz para archivos KML."""
 
     fiona.drvsupport.supported_drivers["KML"] = "rw"
     fiona.drvsupport.supported_drivers["LIBKML"] = "rw"

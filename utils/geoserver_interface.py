@@ -1,6 +1,6 @@
 from typing import Literal, Union
 from urllib.parse import urlparse
-
+from io import BufferedReader
 import requests
 
 from etc.config import settings
@@ -200,5 +200,99 @@ class Geoserver:
             f"{self.rest_url}/workspaces/{self.workspace}/datastores/"
             + f"{self.datastore}/featuretypes/{layer}.xml",
             auth=(self.username, self.password),
+        )
+        response.raise_for_status()
+
+    def list_styles(
+        self,
+    ):
+        """TBD"""
+        response = requests.get(
+            url=f"{self.rest_url}/workspaces/{self.workspace}/styles.json",
+            auth=(self.username, self.password),
+            headers={
+                "accept": "application/json",
+            },
+        )
+        response.raise_for_status()
+        return [
+            style["name"] for style in response.json()["styles"]["style"]
+        ]
+
+    def delete_style(
+        self,
+        style:str,
+        purge:bool=False,
+        recurse:bool=False,
+        if_not_exists:Literal["fail", "ignore"]="fail",
+    ):
+        """
+        Kwargs:
+            purge: Specifies whether the underlying file containing the style should be deleted on disk.
+            recurse: Removes references to the specified style in existing layers.
+        """
+        if style not in self.list_styles() and if_not_exists == "ignore":
+            return
+        response = requests.delete(
+            url=f"{self.rest_url}/workspaces/{self.workspace}/styles/{style}"
+                + f"?purge={str(purge).lower()}&recurse={str(recurse).lower()}",
+            auth=(self.username, self.password),
+            headers={
+                "content-type": "application/xml",
+            },
+        )
+        if response.status_code == 403:
+            raise requests.exceptions.HTTPError(f"Style '{style}' on workspace '{self.workspace}' "
+                "can't be deleted while it is currently being used by some layer. Try "
+                "to free it using Geoserver or force delete using parameter 'recurse=True'"
+            )
+        response.raise_for_status()
+
+    def push_style(
+        self,
+        style:str,
+        data:Union[str, BufferedReader],
+        if_exists: Literal["fail", "ignore", "replace"] = "fail",
+    ) -> None:
+        """TBD"""
+        if style in self.list_styles() and if_exists == "ignore":
+            return
+        if isinstance(data, str):
+            data = open(data, "rb")
+        elif if_exists == "replace":
+            self.delete_style(
+                style=style,
+                purge=True,
+                recurse=True,
+                if_not_exists="ignore",
+            )
+        response = requests.post(
+            url=f"{self.rest_url}/workspaces/{self.workspace}"
+            + f"/styles?name={style}",
+            auth=(self.username, self.password),
+            headers={"Content-type": "application/vnd.ogc.sld+xml"},
+            data=data,
+        )
+        response.raise_for_status()
+
+    def assign_style(
+        self,
+        style:str,
+        layer:str,
+    ):
+        """TBD"""
+        response = requests.put(
+            url=f"{self.rest_url}/workspaces/{self.workspace}/layers/{layer}",
+            auth=(self.username, self.password),
+            headers={
+                "content-type": "application/xml",
+            },
+            data=f"""
+                <layer>
+                    <defaultStyle>
+                        <name>{style}</name>
+                    </defaultStyle>
+                </layer>
+            """, 
         )
         response.raise_for_status()
