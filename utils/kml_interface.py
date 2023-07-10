@@ -29,16 +29,16 @@ class KML:
         Inicializa un manejador de archivos KML.
 
         Args:
-            file (Union[str, FileStorage, geopandas.GeoDataFrame]): El archivo KML a manejar.
-                Puede ser una ruta de archivo (str), un objeto FileStorage o un GeoDataFrame.
-            driver (Optional[str]): El driver a utilizar para leer y escribir archivos KML.
-                Por defecto es 'KML'.
-            chunksize (Optional[int]): La cantidad de entidades por fragmento al leer archivos KML.
-                Si se especifica, el archivo KML se leerá en fragmentos como un generador.
-            optional (Optional[dict]): Parámetros opcionales adicionales que se pasan a la función.
+                file (Union[str, FileStorage, geopandas.GeoDataFrame]): El archivo KML a manejar.
+                        Puede ser una ruta de archivo (str), un objeto FileStorage o un GeoDataFrame.
+                driver (Optional[str]): El driver a utilizar para leer y escribir archivos KML.
+                        Por defecto es 'KML'.
+                chunksize (Optional[int]): La cantidad de entidades por fragmento al leer archivos KML.
+                        Si se especifica, el archivo KML se leerá en fragmentos como un generador.
+                optional (Optional[dict]): Parámetros opcionales adicionales que se pasan a la función.
 
         Raises:
-            Exception: Si el archivo no puede ser manejado.
+                Exception: Si el archivo no puede ser manejado.
 
         """
         self._driver = driver
@@ -89,7 +89,7 @@ class KML:
         Directorio temporal utilizado para almacenar los archivos KML.
 
         Returns:
-            str: Ruta del directorio temporal.
+                str: Ruta del directorio temporal.
 
         """
         if getattr(self, "_temp_dir", None) is None:
@@ -102,7 +102,7 @@ class KML:
         Ruta del archivo KML.
 
         Returns:
-            str: Ruta del archivo KML.
+                str: Ruta del archivo KML.
 
         """
         return self._path
@@ -113,7 +113,7 @@ class KML:
         Driver utilizado para leer y escribir archivos KML.
 
         Returns:
-            str: Driver utilizado.
+                str: Driver utilizado.
 
         """
         return self._driver
@@ -124,7 +124,7 @@ class KML:
         Tamaño de los fragmentos al leer archivos KML.
 
         Returns:
-            int: Tamaño de los fragmentos.
+                int: Tamaño de los fragmentos.
 
         """
         return self._chunksize
@@ -135,7 +135,7 @@ class KML:
         Parámetros opcionales adicionales para la lectura de archivos KML.
 
         Returns:
-            dict: Parámetros opcionales adicionales.
+                dict: Parámetros opcionales adicionales.
 
         """
         return self._optional
@@ -146,7 +146,7 @@ class KML:
         Lista de carpetas (layers) en el archivo KML.
 
         Returns:
-            list[str]: Lista de carpetas en el archivo KML.
+                list[str]: Lista de carpetas en el archivo KML.
 
         """
         return fiona.listlayers(self.path)
@@ -156,7 +156,7 @@ class KML:
         Establece los valores de los atributos de la clase.
 
         Args:
-            **kwargs: Valores de los atributos a establecer.
+                **kwargs: Valores de los atributos a establecer.
 
         """
         for key, value in kwargs.items():
@@ -170,15 +170,15 @@ class KML:
         Lee el archivo KML y devuelve un GeoDataFrame o un generador de GeoDataFrames.
 
         Args:
-            driver (Optional[str]): El driver a utilizar para leer el archivo KML.
-                Si no se especifica, se utiliza el driver establecido en la inicialización.
-            chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
-                Si no se especifica, se utiliza el valor establecido en la inicialización.
-            **kwargs: Parámetros opcionales adicionales que se pasan a la función.
+                driver (Optional[str]): El driver a utilizar para leer el archivo KML.
+                        Si no se especifica, se utiliza el driver establecido en la inicialización.
+                chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
+                        Si no se especifica, se utiliza el valor establecido en la inicialización.
+                **kwargs: Parámetros opcionales adicionales que se pasan a la función.
 
         Returns:
-            Union[geopandas.GeoDataFrame, Generator[geopandas.GeoDataFrame, None, None]]:
-                Un GeoDataFrame si no se especifica `chunksize`, o un generador de GeoDataFrames si se especifica.
+                Union[geopandas.GeoDataFrame, Generator[geopandas.GeoDataFrame, None, None]]:
+                        Un GeoDataFrame si no se especifica `chunksize`, o un generador de GeoDataFrames si se especifica.
 
         """
         driver = driver or self.driver
@@ -197,12 +197,12 @@ class KML:
         Carga el archivo KML completo y devuelve un GeoDataFrame.
 
         Args:
-            driver (Optional[str]): El driver a utilizar para leer el archivo KML.
-                Si no se especifica, se utiliza el driver establecido en la inicialización.
-            **kwargs: Parámetros opcionales adicionales que se pasan a la función.
+                driver (Optional[str]): El driver a utilizar para leer el archivo KML.
+                        Si no se especifica, se utiliza el driver establecido en la inicialización.
+                **kwargs: Parámetros opcionales adicionales que se pasan a la función.
 
         Returns:
-            geopandas.GeoDataFrame: El GeoDataFrame cargado desde el archivo KML.
+                geopandas.GeoDataFrame: El GeoDataFrame cargado desde el archivo KML.
 
         """
         driver = driver or self.driver
@@ -228,14 +228,14 @@ class KML:
         Carga el archivo KML en fragmentos y devuelve un generador de GeoDataFrames.
 
         Args:
-            driver (Optional[str]): El driver a utilizar para leer el archivo KML.
-                Si no se especifica, se utiliza el driver establecido en la inicialización.
-            chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
-                Si no se especifica, se utiliza el valor establecido en la inicialización.
-            **kwargs: Parámetros opcionales adicionales que se pasan a la función.
+                driver (Optional[str]): El driver a utilizar para leer el archivo KML.
+                        Si no se especifica, se utiliza el driver establecido en la inicialización.
+                chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
+                        Si no se especifica, se utiliza el valor establecido en la inicialización.
+                **kwargs: Parámetros opcionales adicionales que se pasan a la función.
 
         Yields:
-            Generator[geopandas.GeoDataFrame, None, None]: Un generador de GeoDataFrames cargados desde el archivo KML.
+                Generator[geopandas.GeoDataFrame, None, None]: Un generador de GeoDataFrames cargados desde el archivo KML.
 
         """
         driver = driver or self.driver
@@ -294,11 +294,11 @@ class KML:
         Maneja los anillos lineales (LinearRings) en el archivo KML.
 
         Args:
-            errors (Literal["fail", "drop", "replace"]): La acción a realizar cuando se encuentren
-                errores en los anillos lineales.
-                - "fail": Lanza una excepción y falla si se encuentran errores.
-                - "drop": Elimina los anillos lineales con errores.
-                - "replace": Reemplaza las coordenadas faltantes en los anillos lineales con errores.
+                errors (Literal["fail", "drop", "replace"]): La acción a realizar cuando se encuentren
+                        errores en los anillos lineales.
+                        - "fail": Lanza una excepción y falla si se encuentran errores.
+                        - "drop": Elimina los anillos lineales con errores.
+                        - "replace": Reemplaza las coordenadas faltantes en los anillos lineales con errores.
 
         """
         if errors == "fail":

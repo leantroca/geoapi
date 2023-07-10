@@ -100,15 +100,6 @@ url = reqparse.Argument(
     help="KML file url to be imported.",
 )
 
-query = reqparse.Argument(
-    "query",
-    dest="file",
-    location="form",
-    type=str,
-    required=True,
-    help="Query to be imported.",
-)
-
 layer = reqparse.Argument(
     "layer",
     dest="layer",

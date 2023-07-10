@@ -18,6 +18,7 @@ GEOSERVER_USERNAME = "username"
 GEOSERVER_PASSWORD = "password"
 GEOSERVER_WORKSPACE = "workspace"
 GEOSERVER_DATASTORE = "datastore"
+GEOSERVER_STYLE_STORAGE = "/usr/share/geoserver/data_dir/styles"
 
 # PostGIS interface
 POSTGIS_HOST = "localhost:5432"
