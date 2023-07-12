@@ -8,73 +8,76 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 from etc.config import settings
-from models.tables import Batches, Geometries, Layers, Logs, clean_nones
+from models.tables import Batches, Geometries, Layers, Logs
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
+from utils.general import clean_nones
+
+from api.logger import core_exception_logger, debug_metadata, keep_track
 
 postgis = PostGIS()
 geoserver = Geoserver()
 
 
-def core_exception_logger(target):
-    def wrapper(*args, **kwargs):
-        log = kwargs.get("log") or keep_track()
-        if isinstance(log, int):
-            log = postgis.get_log(id=log)
-        kwargs["log"] = log
-        try:
-            return target(**kwargs)
-        except Exception as error:
-            if isinstance(error, ValueError):
-                log.status = 400
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
-            else:
-                log.status = 500
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
-                raise error
+# def core_exception_logger(target):
+#     def wrapper(*args, **kwargs):
+#         log = kwargs.get("log") or keep_track()
+#         if isinstance(log, int):
+#             log = postgis.get_log(id=log)
+#         kwargs["log"] = log
+#         try:
+#             return target(**kwargs)
+#         except Exception as error:
+#             if isinstance(error, ValueError):
+#                 log.status = 400
+#                 log.message = str(error)
+#                 log.json = debug_metadata(**kwargs)
+#                 postgis.session.commit()
+#             else:
+#                 log.status = 500
+#                 log.message = str(error)
+#                 log.json = debug_metadata(**kwargs)
+#                 postgis.session.commit()
+#                 raise error
 
-    return wrapper
-
-
-def debug_metadata(**kwargs) -> dict:
-    return clean_nones(
-        {
-            key: value
-            if key not in ["file"]
-            else str([os.path.basename(element) for element in value])
-            for key, value in kwargs.items()
-            if key not in ["log"]
-        }
-    )
+#     return wrapper
 
 
-def keep_track(log: Union[int, Logs] = None, **kwargs):
-    """
-    Registra y actualiza información de seguimiento en la base de datos.
+# def debug_metadata(**kwargs) -> dict:
+#     return clean_nones(
+#         {
+#             key: value
+#             if key not in ["file"]
+#             else str([os.path.basename(element) for element in value])
+#             for key, value in kwargs.items()
+#             if key not in ["log"]
+#         }
+#     )
 
-    Args:
-        log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
-            se creará uno nuevo. Default es None.
-        **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
 
-    Returns:
-        Logs: El registro actualizado en la base de datos.
+# def keep_track(log: Union[int, Logs] = None, **kwargs):
+#     """
+#     Registra y actualiza información de seguimiento en la base de datos.
 
-    """
-    if log is None:
-        log = Logs()
-        postgis.session.add(log)
-    if isinstance(log, int):
-        log = postgis.get_log(id=log)
-    postgis.session.flush()
-    log.update(**kwargs)
-    postgis.session.commit()
-    return log
+#     Args:
+#         log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
+#             se creará uno nuevo. Default es None.
+#         **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
+
+#     Returns:
+#         Logs: El registro actualizado en la base de datos.
+
+#     """
+#     if log is None:
+#         log = Logs()
+#         postgis.session.add(log)
+#     if isinstance(log, int):
+#         log = postgis.get_log(id=log)
+#     postgis.session.flush()
+#     log.update(**kwargs)
+#     postgis.session.commit()
+#     return log
 
 
 def generate_batch(

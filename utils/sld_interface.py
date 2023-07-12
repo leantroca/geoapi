@@ -11,30 +11,30 @@ class SLD:
 
     def __init__(
         self,
-        file: Union[str, FileStorage, Type["SLD"]],
+        data: Union[str, FileStorage, Type["SLD"]],
         **kwargs,
     ):
         """TBD"""
-        if isinstance(file, str):
-            if re.match(r"^(http|https)://", file.strip().lower()):
+        if isinstance(data, str):
+            if re.match(r"^(http|https)://", data.strip().lower()):
                 self._path = self.temp_handle
-                response = requests.get(file)
+                response = requests.get(data)
                 response.raise_for_status()
                 with open(self._path, "wb") as writer:
                     writer.write(response.content)
                 return
             self._temp_dir = None
-            self._path = file
+            self._path = data
             return
-        if isinstance(file, FileStorage):
+        if isinstance(data, FileStorage):
             self._path = self.temp_handle
-            file.save(self._path)
+            data.save(self._path)
             return
-        if self.isselfinstance(file):
+        if self.isselfinstance(data):
             self._temp_dir = None
-            self._path = file.path
+            self._path = data.path
             return
-        raise Exception(f"file {file} of class {type(file)} can't be handled.")
+        raise Exception(f"data {data} of class {type(data)} can't be handled.")
 
     def __del__(self):
         """
@@ -76,3 +76,7 @@ class SLD:
 
         """
         return self._path
+
+    def read(self):
+        """TBD"""
+        return open(self._path, "rb")
