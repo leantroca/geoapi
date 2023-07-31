@@ -4,22 +4,8 @@ from flask_restx import reqparse
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-
-def form_maker(*args):
-    """
-    Crea un objeto RequestParser con los argumentos proporcionados.
-
-    Args:
-        *args: Argumentos a agregar al RequestParser.
-
-    Returns:
-        RequestParser: Objeto RequestParser configurado con los argumentos.
-
-    """
-    request_parser = reqparse.RequestParser()
-    for arg in args:
-        request_parser.add_argument(arg)
-    return request_parser
+from api.utils import form_maker, base_arguments
+from utils.general import clean_nones
 
 
 def parse_kwargs(parser):
@@ -58,7 +44,7 @@ def parse_kwargs(parser):
             element.strip(" ,\"'[](){{}}") for element in kwargs["file"].split(",")
         ]
     kwargs["json"] = body
-    return {key: value for key, value in kwargs.items() if value is not None}
+    return clean_nones(kwargs)
 
 
 """
@@ -82,32 +68,32 @@ parser.add_argument('picture', type=werkzeug.datastructures.FileStorage,
 # https://flask-restx.readthedocs.io/en/latest/api.html#module-flask_restx.reqparse
 """
 
-file = reqparse.Argument(
-    "file",
-    dest="file",
-    location="files",
-    type=FileStorage,
-    required=True,
-    help="KML file to be imported.",
-)
+# file = reqparse.Argument(
+#     "file",
+#     dest="file",
+#     location="files",
+#     type=FileStorage,
+#     required=True,
+#     help="KML file to be imported.",
+# )
 
-url = reqparse.Argument(
-    "url",
-    dest="file",
-    location="form",
-    type=str,
-    required=True,
-    help="KML file url to be imported.",
-)
+# url = reqparse.Argument(
+#     "url",
+#     dest="file",
+#     location="form",
+#     type=str,
+#     required=True,
+#     help="KML file url to be imported.",
+# )
 
-layer = reqparse.Argument(
-    "layer",
-    dest="layer",
-    location="form",
-    type=str,
-    required=True,
-    help="Target layer name to be created.",
-)
+# layer = reqparse.Argument(
+#     "layer",
+#     dest="layer",
+#     location="form",
+#     type=str,
+#     required=True,
+#     help="Target layer name to be created.",
+# )
 
 kml_arguments = {
     "obra": reqparse.Argument(
@@ -196,13 +182,13 @@ kml_arguments = {
     ),
 }
 
-metadata = reqparse.Argument(
-    "metadata",
-    dest="json",
-    location="form",
-    type=str,
-    required=False,
-)
+# metadata = reqparse.Argument(
+#     "metadata",
+#     dest="json",
+#     location="form",
+#     type=str,
+#     required=False,
+# )
 
 kml_error_handle = reqparse.Argument(
     "error_handle",
@@ -235,24 +221,24 @@ delete_geometries = reqparse.Argument(
 
 
 upload_kml_parser = form_maker(
-    file,
-    layer,
+    base_arguments["file"],
+    base_arguments["layer"],
     *kml_arguments.values(),
-    metadata,
+    base_arguments["metadata"],
     kml_error_handle,
 )
 
 download_kml_parser = form_maker(
-    url,
-    layer,
+    base_arguments["url"],
+    base_arguments["layer"],
     *kml_arguments.values(),
-    metadata,
+    base_arguments["metadata"],
     kml_error_handle,
 )
 
 delete_layer_parser = form_maker(
-    layer,
+    base_arguments["layer"],
     delete_geometries,
-    metadata,
+    base_arguments["metadata"],
     layer_error_handle,
 )

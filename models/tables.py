@@ -107,10 +107,10 @@ class Layers(Base):
     __tablename__ = "layers"
 
     name = Column(String, nullable=False, unique=True)
-    style_id = Column(
-        Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    )
-    style = relationship("Styles", backref="layers")
+    # style_id = Column(
+    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
+    # )
+    # style = relationship("Styles", backref="layers")
 
 
 class Batches(Base):
@@ -259,10 +259,10 @@ class Logs(Base):
         Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True
     )
     batch = relationship("Batches", backref="logs")
-    style_id = Column(
-        Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    )
-    style = relationship("Styles", backref="logs")
+    # style_id = Column(
+    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
+    # )
+    # style = relationship("Styles", backref="logs")
 
     def __init__(self):
         Base.__init__(self)
@@ -310,6 +310,7 @@ class Logs(Base):
                 "timestamp": self.timestamp,
                 "metadata": self.json,
                 "batch": self.batch.record if self.batch else None,
+                # "style": self.style.record if self.style else None,
             }
         )
 
@@ -321,7 +322,7 @@ class Logs(Base):
             message (str): Mensaje adicional a agregar.
 
         """
-        self.message = ". ".join([self.message.strip(". "), message.strip(". ")]) + "."
+        self.message = ". ".join([(self.message or "").strip(". "), message.strip(". ")]) + "."
 
 
 @event.listens_for(Logs, "before_update")
@@ -329,15 +330,15 @@ def autoupdate_logs(mapper, connection, log):
     log.url = log.get_url()
 
 
-class Styles(Base):
-    """
-    Definición de tabla para estilos (styles).
+# class Styles(Base):
+#     """
+#     Definición de tabla para estilos (styles).
 
-    Atributos:
-        __tablename__ (str): Nombre de la tabla en la base de datos.
-        name (Column): Columna de tipo String que representa el nombre del estilo.
-    """
+#     Atributos:
+#         __tablename__ (str): Nombre de la tabla en la base de datos.
+#         name (Column): Columna de tipo String que representa el nombre del estilo.
+#     """
 
-    __tablename__ = "styles"
+#     __tablename__ = "styles"
 
-    name = Column(String, nullable=False, unique=True)
+#     name = Column(String, nullable=False, unique=True)
