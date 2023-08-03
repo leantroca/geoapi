@@ -32,16 +32,6 @@ class EndpointServer(Resource):
 		)
 
 
-@namespace.route("/list")
-class StyleList(Resource):
-	"""TBD	"""
-
-	@namespace.doc("List available styles.")
-	def get(self):
-		"""TBD"""
-		return list_available_layers()
-
-
 @namespace.route("/create/form")
 class StyleCreateForm(EndpointServer):
 	"""

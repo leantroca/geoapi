@@ -29,6 +29,27 @@ class ListLayers(Resource):
         return {"layers": geoserver.list_layers()}
 
 
+@namespace.route("/styles")
+class ListLayers(Resource):
+    """
+    Listado de estilos en Geoserver.
+
+    Obtiene la lista de estilos disponibles en Geoserver.
+    """
+
+    @namespace.doc("List Geoserver Styles.")
+    def get(self):
+        """
+        Obtiene la lista de estilos disponibles en Geoserver.
+
+        ---
+        ### responses:
+          - __200__: Registro de estado obtenido correctamente.
+          - __500__: Error interno del servidor.
+        """
+        return {"styles": geoserver.list_styles()}
+
+
 @namespace.route("/record/<int:id>")
 class ProcessStatus(Resource):
     """
