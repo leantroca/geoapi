@@ -9,7 +9,11 @@ from requests.exceptions import HTTPError
 
 
 geoserver = Geoserver()
-postgis = PostGIS()
+
+
+def list_available_layers():
+    """TBD"""
+    return geoserver.list_styles()
 
 
 @core_exception_logger
@@ -47,21 +51,19 @@ def assign_style_to_layer(
         layer=layer,
     )
     log.message = f"{style} style assigned to {layer}."
-    postgis.session.commit()
 
 
 @core_exception_logger
 def delete_style_from_server(
     style: str,
-    if_used: Literal["fail", "cascade"] = "fail",
+    error_handle: Literal["fail", "cascade"] = "fail",
     log: Union[int, Logs] = None,
 ):
     """TBD"""
     geoserver.delete_style(
         style=style,
         purge=True,
-        recurse=(if_used == "cascade"),
+        recurse=(error_handle == "cascade"),
         if_not_exists="ignore",
     )
     log.message = f"{style} style deleted."
-    postgis.session.commit()

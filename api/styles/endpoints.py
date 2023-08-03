@@ -3,17 +3,19 @@ from api.logger import core_exception_logger, debug_metadata, keep_track
 
 from . import namespace
 from .core import (
+	list_available_layers,
 	push_sld_to_style,
 	assign_style_to_layer,
 	delete_style_from_server,
 )
 from .marshal import (
 	parse_kwargs,
-	upload_sld_parser,
+	upload_style_parser,
 	assign_style_parser,
 	delete_style_parser,
 )
 from utils.postgis_interface import PostGIS
+from requests.exceptions import HTTPError
 
 
 postgis = PostGIS()
@@ -30,8 +32,18 @@ class EndpointServer(Resource):
 		)
 
 
-@namespace.route("/sld/form/create")
-class SLDFormCreate(EndpointServer):
+@namespace.route("/list")
+class StyleList(Resource):
+	"""TBD	"""
+
+	@namespace.doc("List available styles.")
+	def get(self):
+		"""TBD"""
+		return list_available_layers()
+
+
+@namespace.route("/create/form")
+class StyleCreateForm(EndpointServer):
 	"""
 	KML File ingest.
 
@@ -39,31 +51,41 @@ class SLDFormCreate(EndpointServer):
 	"""
 
 	@namespace.doc("SLD File import.")
-	@namespace.expect(upload_sld_parser, validate=True)
+	@namespace.expect(upload_style_parser, validate=True)
 	def post(self):
 		"""TBD"""
-		# return (log.record, log.status)
-		kwargs = parse_kwargs(upload_sld_parser)
+		kwargs = parse_kwargs(upload_style_parser)
 		log = self.logger(**kwargs)
 		push_sld_to_style(**kwargs, log=log)
-		postgis.session.commit()
 		return (log.record, log.status)
 
 
-# @namespace.route("/sld/form/assign")
-# class SLDFormCreate(Resource):
-# 	"""
-# 	KML File ingest.
+@namespace.route("/assign/form")
+class StyleAssignForm(EndpointServer):
+	"""TBD"""
 
-# 	Importa un archivo KML al sistema y genera una nueva capa.
-# 	"""
+	@namespace.doc("Assign style to layer.")
+	@namespace.expect(assign_style_parser, validate=True)
+	def put(self):
+		"""TBD"""
+		kwargs = parse_kwargs(assign_style_parser)
+		log = self.logger(**kwargs)
+		assign_style_to_layer(**kwargs, log=log)
+		return (log.record, log.status)
 
-# 	@namespace.doc("SLD File assign to layer.")
-# 	# @namespace.expect(upload_kml_parser, validate=True)
-# 	def post(self):
-# 		"""TBD"""
-# 		# return (log.record, log.status)
-# 		return (
-# 			{"create": True},
-# 			200
-# 		)
+
+@namespace.route("/delete/form")
+class StyleDeleteForm(EndpointServer):
+	"""TBD"""
+
+	@namespace.doc("Delete style from server.")
+	@namespace.expect(delete_style_parser, validate=True)
+	def delete(self):
+		"""TBD"""
+		kwargs = parse_kwargs(delete_style_parser)
+		log = self.logger(**kwargs)
+		try:
+			delete_style_from_server(**kwargs, log=log)
+		except HTTPError as error:
+			keep_track(log, status=400, message=str(error))
+		return (log.record, log.status)

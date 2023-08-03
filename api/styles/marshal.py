@@ -69,7 +69,7 @@ error_delete_unexisting_style = reqparse.Argument(
 )
 
 
-upload_sld_parser = form_maker(
+upload_style_parser = form_maker(
     base_arguments["file"],
     base_arguments["style"],
     error_create_existing_style,
@@ -79,9 +79,11 @@ upload_sld_parser = form_maker(
 assign_style_parser = form_maker(
     base_arguments["style"],
     base_arguments["layer"],
+    base_arguments["metadata"],
 )
 
 delete_style_parser = form_maker(
     base_arguments["style"],
     error_delete_unexisting_style,
+    base_arguments["metadata"],
 )
