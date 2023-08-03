@@ -30,7 +30,7 @@ class ListLayers(Resource):
 
 
 @namespace.route("/styles")
-class ListLayers(Resource):
+class ListStyles(Resource):
     """
     Listado de estilos en Geoserver.
 
