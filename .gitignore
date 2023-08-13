@@ -4,5 +4,4 @@ __pycache__
 *.kml
 *.out
 settings.toml
-models/alembic/versions/*.py
 poetry.lock
