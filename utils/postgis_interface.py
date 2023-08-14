@@ -358,7 +358,7 @@ class PostGIS:
             table = f'"{self.schema}"."{query}"'
         blist = (
             pandas.read_sql(
-                f"SELECT ST_Extent({geometry_col}) AS bbox_str FROM \"{self.schema}\".\"{table}\";",
+                f"SELECT ST_Extent({geometry_col}) AS bbox_str FROM {table};",
                 self.engine,
             )
             .iloc[0, 0]
