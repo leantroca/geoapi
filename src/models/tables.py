@@ -2,6 +2,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
+from etc.config import settings
 from geoalchemy2 import Geometry
 from sqlalchemy import MetaData, event
 from sqlalchemy.dialects.postgresql import JSON
@@ -11,9 +12,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 
-from etc.config import settings
 from utils.general import clean_nones
-
 
 # def clean_nones(kwargs: dict) -> dict:
 #     return {key: value for key, value in kwargs.items() if value not in [None, {}]}
@@ -322,7 +321,9 @@ class Logs(Base):
             message (str): Mensaje adicional a agregar.
 
         """
-        self.message = ". ".join([(self.message or "").strip(". "), message.strip(". ")]) + "."
+        self.message = (
+            ". ".join([(self.message or "").strip(". "), message.strip(". ")]) + "."
+        )
 
 
 @event.listens_for(Logs, "before_update")

@@ -1,10 +1,12 @@
-from typing import Type, Union
-from werkzeug.datastructures import FileStorage
-import re
-import os
-import tempfile
-import requests
 import io
+import os
+import re
+import tempfile
+from typing import Type, Union
+
+import requests
+from werkzeug.datastructures import FileStorage
+
 
 class SLD:
     """

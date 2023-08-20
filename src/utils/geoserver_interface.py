@@ -1,8 +1,8 @@
+from io import BufferedReader
 from typing import Literal, Union
 from urllib.parse import urlparse
-from io import BufferedReader
-import requests
 
+import requests
 from etc.config import settings
 
 
@@ -227,16 +227,14 @@ class Geoserver:
             },
         )
         response.raise_for_status()
-        return [
-            style["name"] for style in response.json()["styles"]["style"]
-        ]
+        return [style["name"] for style in response.json()["styles"]["style"]]
 
     def delete_style(
         self,
-        style:str,
-        purge:bool=False,
-        recurse:bool=False,
-        if_not_exists:Literal["fail", "ignore"]="fail",
+        style: str,
+        purge: bool = False,
+        recurse: bool = False,
+        if_not_exists: Literal["fail", "ignore"] = "fail",
     ):
         """
         Elimina un estilo del servidor GeoServer.
@@ -267,14 +265,15 @@ class Geoserver:
             return
         response = requests.delete(
             url=f"{self.rest_url}/workspaces/{self.workspace}/styles/{style}"
-                + f"?purge={str(purge).lower()}&recurse={str(recurse).lower()}",
+            + f"?purge={str(purge).lower()}&recurse={str(recurse).lower()}",
             auth=(self.username, self.password),
             headers={
                 "content-type": "application/xml",
             },
         )
         if response.status_code == 403:
-            raise requests.exceptions.HTTPError(f"Style '{style}' on workspace '{self.workspace}' "
+            raise requests.exceptions.HTTPError(
+                f"Style '{style}' on workspace '{self.workspace}' "
                 "can't be deleted while it is currently being used by some layer. Try "
                 "to free it using Geoserver or force delete using parameter 'recurse=True'"
             )
@@ -282,8 +281,8 @@ class Geoserver:
 
     def push_style(
         self,
-        style:str,
-        data:Union[str, BufferedReader],
+        style: str,
+        data: Union[str, BufferedReader],
         if_exists: Literal["fail", "ignore", "replace"] = "fail",
     ) -> None:
         """
@@ -333,8 +332,8 @@ class Geoserver:
 
     def assign_style(
         self,
-        style:str,
-        layer:str,
+        style: str,
+        layer: str,
     ):
         """
         Asigna un estilo a una capa en el servidor GeoServer.
@@ -362,6 +361,6 @@ class Geoserver:
                         <name>{style}</name>
                     </defaultStyle>
                 </layer>
-            """, 
+            """,
         )
         response.raise_for_status()

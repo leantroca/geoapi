@@ -4,9 +4,9 @@ from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
+from etc.config import settings
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from etc.config import settings
 from models.tables import Layers, Logs
 
 

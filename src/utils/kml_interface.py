@@ -170,15 +170,15 @@ class KML:
         Lee el archivo KML y devuelve un GeoDataFrame o un generador de GeoDataFrames.
 
         Args:
-                driver (Optional[str]): El driver a utilizar para leer el archivo KML.
-                        Si no se especifica, se utiliza el driver establecido en la inicialización.
-                chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
-                        Si no se especifica, se utiliza el valor establecido en la inicialización.
-                **kwargs: Parámetros opcionales adicionales que se pasan a la función.
+            driver (Optional[str]): El driver a utilizar para leer el archivo KML.
+                    Si no se especifica, se utiliza el driver establecido en la inicialización.
+            chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
+                    Si no se especifica, se utiliza el valor establecido en la inicialización.
+            **kwargs: Parámetros opcionales adicionales que se pasan a la función.
 
         Returns:
-                Union[geopandas.GeoDataFrame, Generator[geopandas.GeoDataFrame, None, None]]:
-                        Un GeoDataFrame si no se especifica `chunksize`, o un generador de GeoDataFrames si se especifica.
+            Union[geopandas.GeoDataFrame, Generator[geopandas.GeoDataFrame, None, None]]:
+                Un GeoDataFrame si no se especifica `chunksize`, o un generador de GeoDataFrames si se especifica.
 
         """
         driver = driver or self.driver
@@ -228,14 +228,14 @@ class KML:
         Carga el archivo KML en fragmentos y devuelve un generador de GeoDataFrames.
 
         Args:
-                driver (Optional[str]): El driver a utilizar para leer el archivo KML.
-                        Si no se especifica, se utiliza el driver establecido en la inicialización.
-                chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
-                        Si no se especifica, se utiliza el valor establecido en la inicialización.
-                **kwargs: Parámetros opcionales adicionales que se pasan a la función.
+            driver (Optional[str]): El driver a utilizar para leer el archivo KML.
+                    Si no se especifica, se utiliza el driver establecido en la inicialización.
+            chunksize (Optional[int]): La cantidad de entidades por fragmento al leer el archivo KML.
+                    Si no se especifica, se utiliza el valor establecido en la inicialización.
+            **kwargs: Parámetros opcionales adicionales que se pasan a la función.
 
         Yields:
-                Generator[geopandas.GeoDataFrame, None, None]: Un generador de GeoDataFrames cargados desde el archivo KML.
+            Generator[geopandas.GeoDataFrame, None, None]: Un generador de GeoDataFrames cargados desde el archivo KML.
 
         """
         driver = driver or self.driver

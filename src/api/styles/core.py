@@ -1,12 +1,12 @@
-from api.logger import core_exception_logger, debug_metadata, keep_track
-from utils.sld_interface import SLD
-from utils.geoserver_interface import Geoserver
-from utils.postgis_interface import PostGIS
-from typing import Union, Literal
-from models.tables import Logs
-from werkzeug.datastructures import FileStorage
-from requests.exceptions import HTTPError
+from typing import Literal, Union
 
+from requests.exceptions import HTTPError
+from werkzeug.datastructures import FileStorage
+
+from api.logger import core_exception_logger
+from models.tables import Logs
+from utils.geoserver_interface import Geoserver
+from utils.sld_interface import SLD
 
 geoserver = Geoserver()
 
@@ -58,7 +58,7 @@ def push_sld_to_style(
             data=sld.read(),
             if_exists=error_handle,
         )
-    except HTTPError as error:
+    except HTTPError:
         if error_handle == "ignore":
             log.message = f"{style} style already exists."
         elif error_handle == "fail":

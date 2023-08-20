@@ -36,12 +36,6 @@ def load_toml_file(path: str = None):
     raise FileNotFoundError("settings.toml file not found.")
 
 
-# def load_json_file(path: str = None) -> dict:
-#     return {
-#         "DEFAULT_CHUNKSIZE": 50,
-#     }
-
-
 def get_settings(
     path: str = os.path.join(PROJECT_DIR, "api", "settings.toml"),
     environment: str = ENVIRONMENT,
@@ -56,11 +50,12 @@ def get_settings(
     return SimpleNamespace(
         PROJECT_DIR=PROJECT_DIR,
         ENVIRONMENT=environment,
-        **dict(toml_file[environment], **kwargs),
+        **{
+            key: kwargs.get(key, value) for key, value in dict(toml_file[environment]).items()
+        },
     )
 
 
-# Se definen los settings que usa el proyecto.
-settings = get_settings(
-    # **load_json_file(),
-)
+# Se definen los settings que usa el proyecto. Cualquier variable que haya sido
+# seteada como envrionment variable sobreescribe a la definidas en los settings.
+settings = get_settings(os.environ)

@@ -1,23 +1,22 @@
 import os
 from typing import Optional, Union
 
+from etc.config import settings
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from etc.config import settings
+from api.logger import core_exception_logger
 from models.tables import Batches, Geometries, Layers, Logs
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS
-from utils.general import clean_nones
-
-from api.logger import core_exception_logger, debug_metadata, keep_track
 
 postgis = PostGIS()
 geoserver = Geoserver()
+
 
 def generate_batch(
     file: Union[str, list, FileStorage],

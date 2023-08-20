@@ -1,10 +1,10 @@
-from utils.postgis_interface import PostGIS
-from utils.geoserver_interface import Geoserver
-from models.tables import Batches, Geometries, Layers, Logs
-from utils.general import clean_nones
 import os
 from typing import Union
-from api.utils import badRequestException, serverErrorException
+
+from models.tables import Logs
+from utils.general import clean_nones
+from utils.geoserver_interface import Geoserver
+from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
 geoserver = Geoserver()
@@ -21,12 +21,14 @@ def core_exception_logger(target):
             postgis.session.commit()
             return result
         except Exception as error:
-            if isinstance(error, ValueError): # reemplazar los: ValueError por: badRequestException
+            if isinstance(
+                error, ValueError
+            ):  # reemplazar los: ValueError por: badRequestException
                 log.status = 400
                 log.message = str(error)
                 log.json = debug_metadata(**kwargs)
                 postgis.session.commit()
-            else: # serverErrorException
+            else:  # serverErrorException
                 log.status = 500
                 log.message = str(error)
                 log.json = debug_metadata(**kwargs)

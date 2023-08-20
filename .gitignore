@@ -4,4 +4,4 @@ __pycache__
 *.kml
 *.out
 settings.toml
-poetry.lock
+settings.local.toml

@@ -1,10 +1,9 @@
 import json
 
 from flask_restx import reqparse
-from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
-from api.utils import form_maker, base_arguments
+from api.utils import base_arguments, form_maker
 from utils.general import clean_nones
 
 
