@@ -19,67 +19,6 @@ from api.logger import core_exception_logger, debug_metadata, keep_track
 postgis = PostGIS()
 geoserver = Geoserver()
 
-
-# def core_exception_logger(target):
-#     def wrapper(*args, **kwargs):
-#         log = kwargs.get("log") or keep_track()
-#         if isinstance(log, int):
-#             log = postgis.get_log(id=log)
-#         kwargs["log"] = log
-#         try:
-#             return target(**kwargs)
-#         except Exception as error:
-#             if isinstance(error, ValueError):
-#                 log.status = 400
-#                 log.message = str(error)
-#                 log.json = debug_metadata(**kwargs)
-#                 postgis.session.commit()
-#             else:
-#                 log.status = 500
-#                 log.message = str(error)
-#                 log.json = debug_metadata(**kwargs)
-#                 postgis.session.commit()
-#                 raise error
-
-#     return wrapper
-
-
-# def debug_metadata(**kwargs) -> dict:
-#     return clean_nones(
-#         {
-#             key: value
-#             if key not in ["file"]
-#             else str([os.path.basename(element) for element in value])
-#             for key, value in kwargs.items()
-#             if key not in ["log"]
-#         }
-#     )
-
-
-# def keep_track(log: Union[int, Logs] = None, **kwargs):
-#     """
-#     Registra y actualiza información de seguimiento en la base de datos.
-
-#     Args:
-#         log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
-#             se creará uno nuevo. Default es None.
-#         **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
-
-#     Returns:
-#         Logs: El registro actualizado en la base de datos.
-
-#     """
-#     if log is None:
-#         log = Logs()
-#         postgis.session.add(log)
-#     if isinstance(log, int):
-#         log = postgis.get_log(id=log)
-#     postgis.session.flush()
-#     log.update(**kwargs)
-#     postgis.session.commit()
-#     return log
-
-
 def generate_batch(
     file: Union[str, list, FileStorage],
     obra: Optional[str] = None,
@@ -405,7 +344,28 @@ def delete_layer(
 
 
 def temp_store(file: Union[str, list]) -> str:
-    """TBD"""
+    """
+    Almacena temporalmente archivos subidos en una ubicación segura.
+
+    Esta función recibe un archivo único o una lista de archivos (representados como
+    strings u objetos FileStorage) y los guarda temporalmente en una ubicación segura
+    definida por la variable settings.TEMP_BASE. Si se proporciona una lista de archivos,
+    cada archivo se almacenará con un nombre único generado en función de su índice en la lista.
+
+    Args:
+        file (Union[str, list]): Ruta de un archivo único o lista de rutas de archivos
+            o objetos FileStorage que serán almacenados temporalmente.
+
+    Returns:
+        str: Ruta de un archivo único o lista de rutas de archivos que apuntan a los
+        archivos almacenados temporalmente.
+
+    Notas:
+        - Si se proporciona una ruta de archivo única, se convertirá en una lista que
+          contiene esa ruta de archivo.
+        - Si la entrada es una lista de objetos FileStorage, cada objeto se guardará
+          en la ubicación temporal utilizando un nombre de archivo único.
+    """
     if not isinstance(file, list):
         file = [file]
     for i, element in enumerate(file):
@@ -418,7 +378,29 @@ def temp_store(file: Union[str, list]) -> str:
 
 
 def temp_remove(file: Union[str, list]) -> None:
-    """TBD"""
+    """
+    Elimina archivos almacenados temporalmente de manera segura.
+
+    Esta función toma una ruta de archivo única o una lista de rutas de archivos y
+    elimina los archivos correspondientes si están almacenados temporalmente en la
+    ubicación segura definida por la variable settings.TEMP_BASE.
+
+    Args:
+        file (Union[str, list]): Ruta de un archivo único o lista de rutas de archivos
+            que serán eliminados si están almacenados temporalmente.
+
+    Returns:
+        None
+
+    Notas:
+        - Si se proporciona una ruta de archivo única, se convertirá en una lista que
+          contiene esa ruta de archivo.
+        - Los archivos se eliminarán solo si su ubicación está dentro de la carpeta
+          definida por settings.TEMP_BASE, lo que asegura que solo se borren archivos
+          temporales creados por la función temp_store.
+        - Si ocurre un error durante el intento de eliminación de un archivo, se ignora
+          silenciosamente.
+    """
     if not isinstance(file, list):
         file = [file]
     for element in file:
@@ -432,4 +414,25 @@ def temp_remove(file: Union[str, list]) -> None:
 
 
 def get_log(id: Union[int, Logs]):
+    """
+    Recupera un registro de registro o una lista de registros según el ID proporcionado.
+
+    Esta función toma un ID de registro único o un objeto Logs y recupera el registro
+    correspondiente utilizando el módulo postgis.get_log si se proporciona un ID entero,
+    o simplemente devuelve el objeto Logs si ya es proporcionado.
+
+    Args:
+        id (Union[int, Logs]): Un ID de registro único o un objeto Logs que se utilizará
+            para recuperar el registro o se devolverá directamente.
+
+    Returns:
+        El registro de registro correspondiente si se proporciona un ID entero, o el
+        objeto Logs proporcionado.
+
+    Notas:
+        - Si se proporciona un objeto Logs en lugar de un ID, se devolverá ese objeto
+          sin realizar ninguna operación adicional.
+        - Si se proporciona un ID entero, se utilizará el módulo postgis.get_log para
+          recuperar el registro de registro correspondiente.
+    """
     return postgis.get_log(id=id) if isinstance(id, int) else id

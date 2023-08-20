@@ -12,7 +12,14 @@ geoserver = Geoserver()
 
 
 def list_available_layers():
-    """TBD"""
+    """
+    Lista las capas disponibles.
+
+    Esta función devuelve una lista de estilos disponibles en el servidor Geoserver.
+
+    Returns:
+        List[str]: Una lista de nombres de estilos disponibles.
+    """
     return geoserver.list_styles()
 
 
@@ -23,7 +30,27 @@ def push_sld_to_style(
     error_handle: Literal["fail", "replace", "ignore"] = "fail",
     log: Union[int, Logs] = None,
 ):
-    """TBD"""
+    """
+    Carga una definición de estilo SLD en un estilo en el servidor Geoserver.
+
+    Esta función toma un archivo SLD o contenido de SLD, carga la definición en el
+    estilo especificado en el servidor Geoserver y maneja errores según las opciones
+    proporcionadas. Actualiza el registro de registro con los mensajes apropiados.
+
+    Args:
+        file (Union[str, FileStorage]): Ruta de archivo o objeto FileStorage que
+            contiene la definición de estilo SLD.
+        style (str): Nombre del estilo en el que se cargará la definición.
+        error_handle (Literal["fail", "replace", "ignore"], optional): Controla el
+            comportamiento en caso de un estilo existente. Opciones: "fail" (por defecto)
+            para lanzar un error, "replace" para reemplazar el estilo, "ignore" para
+            ignorar el error.
+        log (Union[int, Logs], optional): Un ID de registro o objeto Logs para
+            actualizar el registro de registro. Por defecto es None.
+
+    Returns:
+        None
+    """
     sld = SLD(file)
     try:
         geoserver.push_style(
@@ -45,7 +72,22 @@ def assign_style_to_layer(
     layer: str,
     log: Union[int, Logs] = None,
 ):
-    """TBD"""
+    """
+    Asigna un estilo a una capa en el servidor Geoserver.
+
+    Esta función toma un nombre de estilo y un nombre de capa, y asigna el estilo a la
+    capa correspondiente en el servidor Geoserver. Actualiza el registro de registro con
+    los mensajes apropiados.
+
+    Args:
+        style (str): Nombre del estilo que se asignará a la capa.
+        layer (str): Nombre de la capa a la que se asignará el estilo.
+        log (Union[int, Logs], optional): Un ID de registro o objeto Logs para
+            actualizar el registro de registro. Por defecto es None.
+
+    Returns:
+        None
+    """
     geoserver.assign_style(
         style=style,
         layer=layer,
@@ -59,7 +101,24 @@ def delete_style_from_server(
     error_handle: Literal["fail", "cascade"] = "fail",
     log: Union[int, Logs] = None,
 ):
-    """TBD"""
+    """
+    Elimina un estilo del servidor Geoserver.
+
+    Esta función elimina un estilo del servidor Geoserver y maneja errores según las
+    opciones proporcionadas. Actualiza el registro de registro con los mensajes
+    apropiados.
+
+    Args:
+        style (str): Nombre del estilo que se eliminará.
+        error_handle (Literal["fail", "cascade"], optional): Controla el comportamiento
+            en caso de que el estilo no exista. Opciones: "fail" (por defecto) para
+            lanzar un error, "cascade" para eliminar el estilo y sus capas asociadas.
+        log (Union[int, Logs], optional): Un ID de registro o objeto Logs para
+            actualizar el registro de registro. Por defecto es None.
+
+    Returns:
+        None
+    """
     geoserver.delete_style(
         style=style,
         purge=True,

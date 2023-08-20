@@ -206,7 +206,19 @@ class Geoserver:
     def list_styles(
         self,
     ):
-        """TBD"""
+        """
+        Lista los estilos disponibles en el servidor GeoServer.
+
+        Esta función realiza una solicitud GET al servidor GeoServer para obtener la lista
+        de estilos disponibles en el espacio de trabajo y devuelve los nombres de los
+        estilos encontrados.
+
+        Returns:
+            List[str]: Una lista de nombres de estilos disponibles en el servidor.
+
+        Raises:
+            requests.HTTPError: Si la solicitud HTTP al servidor falla.
+        """
         response = requests.get(
             url=f"{self.rest_url}/workspaces/{self.workspace}/styles.json",
             auth=(self.username, self.password),
@@ -227,9 +239,29 @@ class Geoserver:
         if_not_exists:Literal["fail", "ignore"]="fail",
     ):
         """
-        Kwargs:
-            purge: Specifies whether the underlying file containing the style should be deleted on disk.
-            recurse: Removes references to the specified style in existing layers.
+        Elimina un estilo del servidor GeoServer.
+
+        Esta función envía una solicitud DELETE al servidor GeoServer para eliminar el estilo
+        especificado. Puede opcionalmente eliminar el archivo subyacente que contiene el
+        estilo en disco y quitar referencias al estilo en capas existentes.
+
+        Args:
+            style (str): El nombre del estilo que se eliminará.
+            purge (bool, optional): Especifica si el archivo subyacente que contiene el
+                estilo debe eliminarse del disco. Por defecto es False.
+            recurse (bool, optional): Elimina las referencias al estilo en capas existentes.
+                Por defecto es False.
+            if_not_exists (Literal["fail", "ignore"], optional): Controla el comportamiento
+                si el estilo no existe en el servidor. Opciones: "fail" (por defecto) para
+                lanzar un error, "ignore" para omitir la eliminación si no existe.
+
+        Raises:
+            requests.exceptions.HTTPError: Si la solicitud HTTP al servidor falla.
+
+        Note:
+            Si el estilo no existe en el servidor y if_not_exists es "ignore", la función
+            retornará sin hacer nada.
+
         """
         if style not in self.list_styles() and if_not_exists == "ignore":
             return
@@ -254,7 +286,31 @@ class Geoserver:
         data:Union[str, BufferedReader],
         if_exists: Literal["fail", "ignore", "replace"] = "fail",
     ) -> None:
-        """TBD"""
+        """
+        Carga una definición de estilo en el servidor GeoServer.
+
+        Esta función envía una solicitud POST al servidor GeoServer para cargar una
+        definición de estilo en el espacio de trabajo especificado.
+
+        Args:
+            style (str): El nombre del estilo que se creará o reemplazará.
+            data (Union[str, BufferedReader]): Los datos de la definición del estilo, que
+                pueden ser una ruta de archivo o un objeto BufferedReader.
+            if_exists (Literal["fail", "ignore", "replace"], optional): Controla el
+                comportamiento si el estilo ya existe en el servidor. Opciones: "fail" (por
+                defecto) para lanzar un error, "ignore" para omitir la carga si ya existe,
+                "replace" para reemplazar el estilo existente.
+
+        Raises:
+            requests.exceptions.HTTPError: Si la solicitud HTTP al servidor falla.
+
+        Note:
+            - Si el estilo ya existe en el servidor y if_exists es "ignore", la función
+              retornará sin hacer nada.
+            - Si if_exists es "replace", se eliminará el estilo existente antes de cargar
+              la nueva definición.
+
+        """
         if style in self.list_styles() and if_exists == "ignore":
             return
         if isinstance(data, str):
@@ -280,7 +336,20 @@ class Geoserver:
         style:str,
         layer:str,
     ):
-        """TBD"""
+        """
+        Asigna un estilo a una capa en el servidor GeoServer.
+
+        Esta función envía una solicitud PUT al servidor GeoServer para asignar el estilo
+        especificado a una capa existente.
+
+        Args:
+            style (str): El nombre del estilo que se asignará a la capa.
+            layer (str): El nombre de la capa a la que se asignará el estilo.
+
+        Raises:
+            requests.exceptions.HTTPError: Si la solicitud HTTP al servidor falla.
+
+        """
         response = requests.put(
             url=f"{self.rest_url}/workspaces/{self.workspace}/layers/{layer}",
             auth=(self.username, self.password),
