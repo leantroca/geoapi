@@ -203,7 +203,7 @@ def kml_to_create_layer(
     )
     new_layer.batches.append(new_batch)
     postgis.session.add(new_batch)
-    log.batch = new_batch
+    log.batch_id = new_batch.id
     log.message = "PostGIS KML ingested."
     postgis.session.commit()
     # Create View
@@ -435,3 +435,9 @@ def get_log(id: Union[int, Logs]):
           recuperar el registro de registro correspondiente.
     """
     return postgis.get_log(id=id) if isinstance(id, int) else id
+
+
+def get_log_response(id: Union[int, Logs]):
+    """TBD"""
+    log = get_log(id=id)
+    return log.record, log.status

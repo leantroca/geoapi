@@ -1,16 +1,18 @@
 from api.celery import app
 
 from .core import (
-    delete_layer,
     get_log,
-    keep_track,
+    delete_layer,
     kml_to_append_layer,
     kml_to_create_layer,
     temp_remove,
 )
+from api.logger import (
+    keep_track,
+)
 
 
-@app.task(bind=True)
+@app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_kml_to_create_layer(*args, **kwargs):
     """
     Tarea asincrónica para convertir KML y crear una capa.
@@ -35,7 +37,7 @@ def task_kml_to_create_layer(*args, **kwargs):
         keep_track(log=kwargs["log"], append_message="Success!", status=210)
 
 
-@app.task(bind=True)
+@app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_kml_to_append_layer(*args, **kwargs):
     """
     Tarea asincrónica para convertir KML y agregar a capa existente.
@@ -60,7 +62,7 @@ def task_kml_to_append_layer(*args, **kwargs):
         keep_track(log=kwargs["log"], append_message="Success!", status=210)
 
 
-@app.task(bind=True)
+@app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_delete_layer(*args, **kwargs):
     """
     Tarea asincrónica para eliminar una capa.

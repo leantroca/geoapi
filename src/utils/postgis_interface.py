@@ -1,5 +1,5 @@
 import re
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 from urllib.parse import quote_plus
 
 import pandas
@@ -385,8 +385,8 @@ class PostGIS:
         """
         return self.session.query(Layers).filter_by(name=name).first()
 
-    def get_log(self, id: int) -> Logs:
-        return self.session.query(Logs).get(id)
+    def get_log(self, id: Union[int, Logs]) -> Logs:
+        return self.session.query(Logs).get(id) if isinstance(id, int) else id
 
     def get_log_record(self, id: int) -> dict:
         """

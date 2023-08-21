@@ -3,12 +3,9 @@ from typing import Union
 
 from models.tables import Logs
 from utils.general import clean_nones
-from utils.geoserver_interface import Geoserver
 from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
-geoserver = Geoserver()
-
 
 def core_exception_logger(target):
     def wrapper(*args, **kwargs):

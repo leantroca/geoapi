@@ -227,6 +227,8 @@ class Geoserver:
             },
         )
         response.raise_for_status()
+        if response.json()["styles"] == "":
+            return []            
         return [style["name"] for style in response.json()["styles"]["style"]]
 
     def delete_style(

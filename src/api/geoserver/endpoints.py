@@ -2,8 +2,7 @@ from flask_restx import Resource
 
 from . import namespace
 from .core import (
-    debug_metadata,
-    keep_track,
+    get_log_response,
     temp_remove,
     temp_store,
     verify_layer_exists,
@@ -16,6 +15,7 @@ from .marshal import (
     upload_kml_parser,
 )
 from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_create_layer
+from api.logger import debug_metadata, keep_track
 
 
 class EndpointServer(Resource):
@@ -80,7 +80,7 @@ class KMLFormCreate(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
             temp_remove(kwargs["file"])
-        return (log.record, log.status)
+        return get_log_response(log)
 
 
 @namespace.route("/kml/form/append")
