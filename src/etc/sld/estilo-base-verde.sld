@@ -13,7 +13,7 @@
               <ogc:Function name="dimension">
                 <ogc:PropertyName>geometry</ogc:PropertyName>
               </ogc:Function>
-              <ogc:Literal>2</ogc:Literal>                
+              <ogc:Literal>2</ogc:Literal>
             </ogc:PropertyIsEqualTo>
           </ogc:Filter>
           <PolygonSymbolizer>
@@ -46,7 +46,7 @@
               <ogc:Function name="dimension">
                 <ogc:PropertyName>geometry</ogc:PropertyName>
               </ogc:Function>
-              <ogc:Literal>1</ogc:Literal>                
+              <ogc:Literal>1</ogc:Literal>
             </ogc:PropertyIsEqualTo>
           </ogc:Filter>
           <LineSymbolizer>
@@ -73,7 +73,7 @@
               <ogc:Function name="dimension">
                 <ogc:PropertyName>geometry</ogc:PropertyName>
               </ogc:Function>
-              <ogc:Literal>0</ogc:Literal>                
+              <ogc:Literal>0</ogc:Literal>
             </ogc:PropertyIsEqualTo>
           </ogc:Filter>
           <PointSymbolizer>

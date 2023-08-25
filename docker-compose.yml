@@ -12,13 +12,6 @@ services:
     build:
       context: "."
       dockerfile: "./docker/postgis/Dockerfile"
-    # image: "postgis/postgis:latest"
-    # environment:
-    #   POSTGRES_DB: "geoserver"
-    #   POSTGRES_USER: "geoserver"
-    #   POSTGRES_PASSWORD: "geoserver"
-    # volumes:
-    #   - "./docker/postgis/CreateDB.sql:/docker-entrypoint-initdb.d/CreateDB.sql"
     ports:
       - "5433:5432"
   ### GEOSERVER #####################################
