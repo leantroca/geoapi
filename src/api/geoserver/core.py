@@ -288,7 +288,7 @@ def kml_to_append_layer(
     )
     append_layer.batches.append(new_batch)
     postgis.session.add(new_batch)
-    log.batch = new_batch
+    log.batch_id = new_batch.id
     log.message = "PostGIS KML ingested."
     postgis.session.commit()
     geoserver.delete_layer(
