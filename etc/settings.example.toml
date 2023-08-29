@@ -3,31 +3,34 @@
 # Crear archivo etc/settings.toml completando los siguientes campos.
 
 # GeoAPI settings
-BASE_URL = "http://localhost:5000/"
-LISTEN_TO = "127.0.0.1"
-DEBUG = True
+BASE_URL="http://localhost:5000/"
+LISTEN_TO="127.0.0.1"
+PORT=5000
+DEBUG=true
 
 # Data settings
-CLIENT_TIMEZONE = "America/Argentina/Buenos_Aires"
-COORDINATE_SYSTEM = "EPSG:4326"
-DEFAULT_CHUNKSIZE = 50
+CLIENT_TIMEZONE="America/Argentina/Buenos_Aires"
+COORDINATE_SYSTEM="EPSG:4326"
+DEFAULT_CHUNKSIZE=50
 
 # Geoserver interface
-GEOSERVER_BASE_URL = "http://localhost:8080/"
-GEOSERVER_USERNAME = "username"
-GEOSERVER_PASSWORD = "password"
-GEOSERVER_WORKSPACE = "workspace"
-GEOSERVER_DATASTORE = "datastore"
+GEOSERVER_BASE_URL="http://localhost:8080/"
+GEOSERVER_USERNAME="username"
+GEOSERVER_PASSWORD="password"
+GEOSERVER_WORKSPACE="workspace"
+GEOSERVER_DATASTORE="datastore"
+GEOSERVER_STYLE_STORAGE="/usr/share/geoserver/data_dir/styles"
 
 # PostGIS interface
-POSTGIS_HOST = "localhost:5432"
-POSTGIS_USER = "username"
-POSTGIS_PASS = "password"
-POSTGIS_DATABASE = "postgis"
-POSTGIS_SCHEMA = "public"
-POSTGIS_DRIVER = "postgresql+psycopg2"
-POSTGIS_TIMEZONE = "UTC"
+POSTGIS_HOSTNAME="localhost"
+POSTGIS_PORT=5432
+POSTGIS_USER="username"
+POSTGIS_PASS="password"
+POSTGIS_DATABASE="postgis"
+POSTGIS_SCHEMA="public"
+POSTGIS_DRIVER="postgresql+psycopg2"
+POSTGIS_TIMEZONE="UTC"
 
 # CELERY Settings
-CELERY_BROKER = "redis://localhost:6379/0"
-TEMP_BASE = "/tmp"
+CELERY_BROKER="redis://localhost:6379/0"
+TEMP_BASE="/tmp"

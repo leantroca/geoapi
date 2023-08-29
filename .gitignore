@@ -3,5 +3,6 @@ __pycache__
 *.csv
 *.kml
 *.out
-settings.toml
-poetry.lock
+*settings.toml
+*settings.local*.toml
+*settings.min*.toml

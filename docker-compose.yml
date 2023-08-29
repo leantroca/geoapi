@@ -1,0 +1,84 @@
+version: '3.2'
+services:
+  ### POETRY ########################################
+  poetry-env:
+    container_name: "poetry-env"
+    build:
+      context: "."
+      dockerfile: "./docker/poetry-env/Dockerfile"
+  ### POSTGIS #######################################
+  postgis:
+    container_name: "postgis"
+    build:
+      context: "."
+      dockerfile: "./docker/postgis/Dockerfile"
+    ports:
+      - "5433:5432"
+  ### GEOSERVER #####################################
+  geoserver:
+    depends_on:
+      - "postgis"
+    container_name: "geoserver"
+    build:
+      context: "."
+      dockerfile: "./docker/geoserver/Dockerfile"
+    environment:
+      SKIP_DEMO_DATA: "true"
+      ROOT_WEBAPP_REDIRECT: "true"
+      INSTALL_EXTENSIONS: "true"
+      STABLE_EXTENSIONS: "importer"
+      CORS_ENABLED: "true"
+    ports:
+      - "8081:8080"
+  ### GEOAPI ########################################
+  geoapi:
+    depends_on: 
+      - "geoserver"
+      - "postgis"
+      - "celery"
+      - "redis"
+      - "poetry-env"
+    container_name: "geoapi"
+    build:
+      context: "."
+      dockerfile: "./docker/geoapi/Dockerfile"
+    environment:
+      ENVIRONMENT: "docker"
+    ports:
+      - "5001:5000"
+    volumes:
+      - "./src:/geoapi/src"
+      - "./etc:/geoapi/etc"
+      - "/tmp/geoapi:/tmp"
+  ### CELERY ########################################
+  celery:
+    depends_on:
+      - "redis"
+      - "poetry-env"
+    container_name: "celery"
+    build:
+      context: "."
+      dockerfile: "./docker/celery/Dockerfile"
+    environment:
+      ENVIRONMENT: "docker"
+    volumes:
+      - "./src:/geoapi/src"
+      - "./etc:/geoapi/etc"
+      - "/tmp/geoapi:/tmp"
+  ### REDIS #########################################
+  redis:
+    container_name: "redis"
+    image: "redis:latest"
+    ports:
+      - "6380:6379"
+  ### ARGENAMP ######################################
+  argenmap:
+    container_name: "argenmap"
+    depends_on:
+      - "geoserver"
+    build:
+      context: "."
+      dockerfile: "./docker/argenmap/Dockerfile"
+    ports:
+      - "81:80"
+      - "444:443"
