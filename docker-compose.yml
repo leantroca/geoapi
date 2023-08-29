@@ -28,8 +28,6 @@ services:
       INSTALL_EXTENSIONS: "true"
       STABLE_EXTENSIONS: "importer"
       CORS_ENABLED: "true"
-    # volumes:
-    #   - "./etc/settings.toml:/home/settings.toml"
     ports:
       - "8081:8080"
   ### GEOAPI ########################################
@@ -81,8 +79,6 @@ services:
     build:
       context: "."
       dockerfile: "./docker/argenmap/Dockerfile"
-    # volumes:
-    #   - "./docker/argenmap/data.json:/usr/local/apache2/htdocs/src/config/default/data.json"
     ports:
-      - "81:80"
-      - "444:443"
+      - "80:80"
+      - "443:443"

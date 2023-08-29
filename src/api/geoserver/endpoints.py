@@ -1,5 +1,7 @@
 from flask_restx import Resource
 
+from api.logger import debug_metadata, keep_track
+
 from . import namespace
 from .core import (
     get_log_response,
@@ -15,7 +17,6 @@ from .marshal import (
     upload_kml_parser,
 )
 from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_create_layer
-from api.logger import debug_metadata, keep_track
 
 
 class EndpointServer(Resource):

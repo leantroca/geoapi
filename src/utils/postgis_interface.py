@@ -4,10 +4,10 @@ from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
-from utils.config import settings
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from models.tables import Layers, Logs
+from utils.config import settings
 
 
 class PostGIS:
@@ -42,7 +42,9 @@ class PostGIS:
             **kwargs: Argumentos clave adicionales.
 
         """
-        self._host = host or settings.__getattribute__("POSTGIS_HOSTNAME") + ":" + str(settings.__getattribute__("POSTGIS_PORT"))
+        self._host = host or settings.__getattribute__("POSTGIS_HOSTNAME") + ":" + str(
+            settings.__getattribute__("POSTGIS_PORT")
+        )
         self._username = username or settings.__getattribute__("POSTGIS_USER")
         self._password = password or settings.__getattribute__("POSTGIS_PASS")
         self._database = database or settings.__getattribute__("POSTGIS_DATABASE")

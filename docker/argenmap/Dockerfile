@@ -12,6 +12,7 @@ RUN chmod 755 /usr/local/apache2/htdocs/src/config/default/data.json
 
 # Expose port 80 for the Apache server
 EXPOSE 80
+EXPOSE 443
 
 # Start Apache server in the foreground
 CMD ["httpd", "-D", "FOREGROUND"]

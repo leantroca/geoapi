@@ -1,7 +1,6 @@
 import os
 from typing import Optional, Union
 
-from utils.config import settings
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
@@ -10,6 +9,7 @@ from werkzeug.utils import secure_filename
 
 from api.logger import core_exception_logger
 from models.tables import Batches, Geometries, Layers, Logs
+from utils.config import settings
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
 from utils.postgis_interface import PostGIS

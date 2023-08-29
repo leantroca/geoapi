@@ -4,7 +4,9 @@ from types import SimpleNamespace
 import toml
 
 # Variables globales para el proyecto.
-PROJECT_DIR = os.environ.get("PROJECT_DIR", os.path.abspath(os.path.dirname(os.getcwd())))
+PROJECT_DIR = os.environ.get(
+    "PROJECT_DIR", os.path.abspath(os.path.dirname(os.getcwd()))
+)
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
 
@@ -51,7 +53,8 @@ def get_settings(
         PROJECT_DIR=PROJECT_DIR,
         ENVIRONMENT=environment,
         **{
-            key: kwargs.get(key, value) for key, value in dict(toml_file[environment]).items()
+            key: kwargs.get(key, value)
+            for key, value in dict(toml_file[environment]).items()
         },
     )
 

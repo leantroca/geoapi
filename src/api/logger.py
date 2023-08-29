@@ -7,6 +7,7 @@ from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
 
+
 def core_exception_logger(target):
     def wrapper(*args, **kwargs):
         log = kwargs.get("log") or keep_track()

@@ -27,10 +27,3 @@ for file in "$folder_path"/*; do
 done
 # Copy png files expected by styles
 cp -r $folder_path/png $GEOSERVER_STYLE_STORAGE/
-
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-rojo -u admin:geoserver -d @/home/styles/estilo-base-rojo.sld -H "Content-type: application/vnd.ogc.sld+xml"
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-azul -u admin:geoserver -d @/home/styles/estilo-base-azul.sld -H "Content-type: application/vnd.ogc.sld+xml"
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-verde -u admin:geoserver -d @/home/styles/estilo-base-verde.sld -H "Content-type: application/vnd.ogc.sld+xml"
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-amarillo -u admin:geoserver -d @/home/styles/estilo-base-amarillo.sld -H "Content-type: application/vnd.ogc.sld+xml"
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-violeta -u admin:geoserver -d @/home/styles/estilo-base-violeta.sld -H "Content-type: application/vnd.ogc.sld+xml"
-# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-blanco -u admin:geoserver -d @/home/styles/estilo-base-blanco.sld -H "Content-type: application/vnd.ogc.sld+xml"

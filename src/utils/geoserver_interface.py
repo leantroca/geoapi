@@ -3,6 +3,7 @@ from typing import Literal, Union
 from urllib.parse import urlparse
 
 import requests
+
 from utils.config import settings
 
 
@@ -228,7 +229,7 @@ class Geoserver:
         )
         response.raise_for_status()
         if response.json()["styles"] == "":
-            return []            
+            return []
         return [style["name"] for style in response.json()["styles"]["style"]]
 
     def delete_style(

@@ -1,7 +1,7 @@
-from utils.config import settings
 from flask import Flask
 
 from api import blueprint
+from utils.config import settings
 
 app = Flask(__name__)
 

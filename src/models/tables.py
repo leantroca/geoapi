@@ -2,7 +2,6 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
-from utils.config import settings
 from geoalchemy2 import Geometry
 from sqlalchemy import MetaData, event
 from sqlalchemy.dialects.postgresql import JSON
@@ -12,6 +11,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql.schema import Column, ForeignKey
 from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 
+from utils.config import settings
 from utils.general import clean_nones
 
 # def clean_nones(kwargs: dict) -> dict:
