@@ -80,5 +80,5 @@ services:
       context: "."
       dockerfile: "./docker/argenmap/Dockerfile"
     ports:
-      - "80:80"
-      - "443:443"
+      - "81:80"
+      - "444:443"
