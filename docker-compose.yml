@@ -74,13 +74,15 @@ services:
     ports:
       - "6380:6379"
   ### ARGENAMP ######################################
-  # argenmap:
-  #   container_name: "argenmap"
-  #   build:
-  #     context: "./argenmap"
-  #     dockerfile: "Dockerfile"
-  #   volumes:
-  #     - ""
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
+  argenmap:
+    container_name: "argenmap"
+    depends_on:
+      - "geoserver"
+    build:
+      context: "."
+      dockerfile: "./docker/argenmap/Dockerfile"
+    # volumes:
+    #   - "./docker/argenmap/data.json:/usr/local/apache2/htdocs/src/config/default/data.json"
+    ports:
+      - "81:80"
+      - "444:443"
