@@ -10,4 +10,3 @@ RUN chmod +x /geoapi/startup.sh
 
 # Start the API
 CMD ["/geoapi/startup.sh"]
-

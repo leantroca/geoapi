@@ -67,33 +67,6 @@ parser.add_argument('picture', type=werkzeug.datastructures.FileStorage,
 # https://flask-restx.readthedocs.io/en/latest/api.html#module-flask_restx.reqparse
 """
 
-# file = reqparse.Argument(
-#     "file",
-#     dest="file",
-#     location="files",
-#     type=FileStorage,
-#     required=True,
-#     help="KML file to be imported.",
-# )
-
-# url = reqparse.Argument(
-#     "url",
-#     dest="file",
-#     location="form",
-#     type=str,
-#     required=True,
-#     help="KML file url to be imported.",
-# )
-
-# layer = reqparse.Argument(
-#     "layer",
-#     dest="layer",
-#     location="form",
-#     type=str,
-#     required=True,
-#     help="Target layer name to be created.",
-# )
-
 kml_arguments = {
     "obra": reqparse.Argument(
         "obra",
@@ -180,14 +153,6 @@ kml_arguments = {
         required=False,
     ),
 }
-
-# metadata = reqparse.Argument(
-#     "metadata",
-#     dest="json",
-#     location="form",
-#     type=str,
-#     required=False,
-# )
 
 kml_error_handle = reqparse.Argument(
     "error_handle",
