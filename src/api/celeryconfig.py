@@ -1,4 +1,4 @@
-from etc.config import settings
+from utils.config import settings
 
 task_serializer = "json"
 result_serializer = "json"

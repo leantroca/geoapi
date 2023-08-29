@@ -4,4 +4,6 @@ __pycache__
 *.kml
 *.out
 *settings.toml
-*settings.local.toml
+*settings.local*.toml
+*settings.docker*.toml
+*settings.min*.toml

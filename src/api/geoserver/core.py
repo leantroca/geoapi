@@ -1,7 +1,7 @@
 import os
 from typing import Optional, Union
 
-from etc.config import settings
+from utils.config import settings
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape

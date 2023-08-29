@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import toml
 
 # Variables globales para el proyecto.
-PROJECT_DIR = os.environ.get("PROJECT_DIR", os.path.abspath(os.getcwd()))
+PROJECT_DIR = os.environ.get("PROJECT_DIR", os.path.abspath(os.path.dirname(os.getcwd())))
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
 

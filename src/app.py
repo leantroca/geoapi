@@ -1,4 +1,4 @@
-from etc.config import settings
+from utils.config import settings
 from flask import Flask
 
 from api import blueprint

@@ -2,7 +2,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import pytz
-from etc.config import settings
+from utils.config import settings
 from geoalchemy2 import Geometry
 from sqlalchemy import MetaData, event
 from sqlalchemy.dialects.postgresql import JSON

@@ -28,6 +28,8 @@ services:
       INSTALL_EXTENSIONS: "true"
       STABLE_EXTENSIONS: "importer"
       CORS_ENABLED: "true"
+    # volumes:
+    #   - "./etc/settings.toml:/home/settings.toml"
     ports:
       - "8081:8080"
   ### GEOAPI ########################################
@@ -48,6 +50,7 @@ services:
       - "5001:5000"
     volumes:
       - "./src:/geoapi/src"
+      - "./etc:/geoapi/etc"
       - "/tmp/geoapi:/tmp"
   ### CELERY ########################################
   celery:
@@ -62,6 +65,7 @@ services:
       ENVIRONMENT: "docker"
     volumes:
       - "./src:/geoapi/src"
+      - "./etc:/geoapi/etc"
       - "/tmp/geoapi:/tmp"
   ### REDIS #########################################
   redis:

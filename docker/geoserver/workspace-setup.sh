@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+source /home/settings.toml
 
 sh /opt/startup.sh &
 
@@ -8,13 +10,27 @@ do
    sleep 2
 done
 
-curl -s -X POST http://localhost:8080/geoserver/rest/workspaces?default=true -u admin:geoserver -H  "accept: text/html" -H  "content-type: application/json" -d '{"workspace": {"name": "geoapi"}}'
+curl -s -X POST http://localhost:8080/geoserver/rest/workspaces?default=true -u $GEOSERVER_USERNAME:$GEOSERVER_PASSWORD -H  "accept: text/html" -H  "content-type: application/json" -d '{"workspace": {"name": "'$GEOSERVER_WORKSPACE'"}}'
 
-curl -s -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/datastores -u admin:geoserver -H  "accept: application/xml" -H  "content-type: application/json" -d '{"dataStore": {"name": "postgis", "connectionParameters": {"entry": [{"@key":"host","$":"postgis"}, {"@key":"port","$":"5432"}, {"@key":"database","$":"geoserver"}, {"@key":"schema","$":"geoapi"}, {"@key":"user","$":"geoserver"}, {"@key":"passwd","$":"geoserver"}, {"@key":"dbtype","$":"postgis"}]}}}'
+curl -s -X POST http://localhost:8080/geoserver/rest/workspaces/$GEOSERVER_WORKSPACE/datastores -u $GEOSERVER_USERNAME:$GEOSERVER_PASSWORD -H  "accept: application/xml" -H  "content-type: application/json" -d '{"dataStore": {"name": "postgis", "connectionParameters": {"entry": [{"@key":"host","$":"'$POSTGIS_HOSTNAME'"}, {"@key":"port","$":"'$POSTGIS_PORT'"}, {"@key":"database","$":"'$POSTGIS_DATABASE'"}, {"@key":"schema","$":"'$POSTGIS_SCHEMA'"}, {"@key":"user","$":"'$POSTGIS_USER'"}, {"@key":"passwd","$":"'$POSTGIS_PASS'"}, {"@key":"dbtype","$":"postgis"}]}}}'
 
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-rojo -u admin:geoserver -d @/home/styles/estilo-base-rojo.sld -H "Content-type: application/vnd.ogc.sld+xml"
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-azul -u admin:geoserver -d @/home/styles/estilo-base-azul.sld -H "Content-type: application/vnd.ogc.sld+xml"
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-verde -u admin:geoserver -d @/home/styles/estilo-base-verde.sld -H "Content-type: application/vnd.ogc.sld+xml"
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-amarillo -u admin:geoserver -d @/home/styles/estilo-base-amarillo.sld -H "Content-type: application/vnd.ogc.sld+xml"
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-violeta -u admin:geoserver -d @/home/styles/estilo-base-violeta.sld -H "Content-type: application/vnd.ogc.sld+xml"
-curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-blanco -u admin:geoserver -d @/home/styles/estilo-base-blanco.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# Iterate through each file in the folder
+folder_path="/home/styles"
+for file in "$folder_path"/*; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        filename="${filename%.*}"
+        echo "Pushing style $filename"
+        curl -s -X POST http://localhost:8080/geoserver/rest/workspaces/$GEOSERVER_WORKSPACE/styles?name=$filename -u $GEOSERVER_USERNAME:$GEOSERVER_PASSWORD -d @$file -H "Content-type: application/vnd.ogc.sld+xml"
+        sleep 1
+    fi
+done
+# Copy png files expected by styles
+cp -r $folder_path/png $GEOSERVER_STYLE_STORAGE/
+
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-rojo -u admin:geoserver -d @/home/styles/estilo-base-rojo.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-azul -u admin:geoserver -d @/home/styles/estilo-base-azul.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-verde -u admin:geoserver -d @/home/styles/estilo-base-verde.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-amarillo -u admin:geoserver -d @/home/styles/estilo-base-amarillo.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-violeta -u admin:geoserver -d @/home/styles/estilo-base-violeta.sld -H "Content-type: application/vnd.ogc.sld+xml"
+# curl -X POST http://localhost:8080/geoserver/rest/workspaces/geoapi/styles?name=estilo-base-blanco -u admin:geoserver -d @/home/styles/estilo-base-blanco.sld -H "Content-type: application/vnd.ogc.sld+xml"

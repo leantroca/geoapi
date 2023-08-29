@@ -3,7 +3,7 @@ from typing import Literal, Union
 from urllib.parse import urlparse
 
 import requests
-from etc.config import settings
+from utils.config import settings
 
 
 class Geoserver:
