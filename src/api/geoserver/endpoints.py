@@ -27,7 +27,7 @@ class EndpointServer(Resource):
             layer=kwargs["layer"],
             status=200,
             message="Received.",
-            json={key: value for key, value in kwargs.items() if is_jsonable(value)},
+            json={key: value for key, value in kwargs.items() if key != "file"},
         )
 
 
