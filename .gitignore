@@ -3,6 +3,6 @@ __pycache__
 *.csv
 *.kml
 *.out
-*settings.toml
-*settings.local*.toml
-*settings.min*.toml
+settings.toml
+settings.local*.toml
+settings.min*.toml
