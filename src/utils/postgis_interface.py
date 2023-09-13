@@ -426,3 +426,15 @@ class PostGIS:
         """
         return getattr(self.get_batch(id=id), "record", None)
 
+    def get_layer(self, id: Union[int, Logs]=None, name:str=None):
+        """TBD"""
+        if id:
+            return self.session.query(Layers).get(id) if isinstance(id, int) else id
+        elif name:
+            return self.session.query(Layers).filter_by(name=name).first()
+        else:
+            return None
+
+    def get_or_create_layer(self, id: Union[int, Logs]=None, name:str=None):
+        """TBD"""
+        return self.get_layer(id=id, name=name) or Layers(name=name)

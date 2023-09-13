@@ -6,7 +6,6 @@ from .status.endpoints import namespace as status_ns
 from .styles.endpoints import namespace as styles_ns
 from .postgis.endpoints import namespace as postgis_ns
 
-
 blueprint = Blueprint("api", __name__)
 api = Api(blueprint)
 

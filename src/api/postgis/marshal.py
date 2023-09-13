@@ -44,10 +44,25 @@ def parse_kwargs(parser):
     return clean_nones(kwargs)
 
 
+layer_error_handle = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "replace", "ignore"],
+)
 
 kml_to_geometries_parser = form_maker(
     base_arguments["file"],
     *batch_arguments.values(),
     base_arguments["metadata"],
     kml_read_error_handle,
+)
+
+view_to_push_parser = form_maker(
+    base_arguments["layer"],
+    base_arguments["metadata"],
+    layer_error_handle,
 )

@@ -13,13 +13,15 @@ from . import namespace
 # )
 from .marshal import (
     kml_to_geometries_parser,
+    view_to_push_parser,
 #     delete_layer_parser,
 #     download_kml_parser,
     parse_kwargs,
 #     upload_kml_parser,
 )
 from .tasks import (
-    task_kml_to_create_batch
+    task_kml_to_create_batch,
+    task_view_push_to_layer,
 #     task_delete_layer,
 #     task_kml_to_append_layer,
 #     task_kml_to_create_layer,
@@ -89,4 +91,26 @@ class KMLFormIngest(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
             temp_remove(kwargs["file"])
+        return get_log_response(log_id)
+
+
+@namespace.route("/layer/form/push")
+class KMLFormIngest(EndpointServer):
+    """TBD"""
+
+    @namespace.doc("PostGIS Layer push.")
+    @namespace.expect(view_to_push_parser, validate=True)
+    def post(self):
+        """TBD"""
+        kwargs = parse_kwargs(view_to_push_parser)
+        log_id = self.logger(**kwargs).id
+        try:
+            task_view_push_to_layer.delay(**kwargs, log=log_id)
+        except ValueError as error:
+            keep_track(
+                log=log_id,
+                status=400,
+                message=str(error),
+                json=debug_metadata(**kwargs),
+            )
         return get_log_response(log_id)

@@ -14,9 +14,7 @@ from models.tables import Batches, Geometries, Layers, Logs
 from utils.config import settings
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
-from utils.postgis_interface import PostGIS
 
-# postgis = PostGIS()
 geoserver = Geoserver()
 
 
@@ -65,7 +63,7 @@ def kml_to_create_batch(
         None
 
     """
-    log = postgis.get_log(log) if isinstance(log, int) else log or Logs()
+    log = get_log(log) if isinstance(log, int) else log or Logs()
     new_batch = generate_batch(
         file=file,
         obra=obra,
@@ -86,4 +84,26 @@ def kml_to_create_batch(
     postgis.session.add(new_batch)
     log.batch = new_batch
     log.message = "PostGIS KML ingested."
+    postgis.session.commit()
+
+
+@core_exception_logger
+def view_push_to_layer(
+    layer: str,
+    error_handle: str = "fail",
+    log: Logs = None,
+    **kwargs,
+):
+    """
+    TBD
+    """
+    log = get_log(log) if isinstance(log, int) else log or Logs()
+    new_layer = postgis.get_or_create_layer(name=layer)
+    postgis.session.add(new_layer)
+    geoserver.push_layer(
+        layer=layer,
+        if_exists=error_handle,
+        **postgis.bbox(layer),
+    )
+    log.message_append("Geoserver layer created.")
     postgis.session.commit()

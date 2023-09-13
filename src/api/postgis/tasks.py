@@ -5,6 +5,7 @@ from api.utils import temp_remove
 
 from .core import (
     kml_to_create_batch,
+    view_push_to_layer,
     # delete_layer,
     # get_log,
     # kml_to_append_layer,
@@ -35,3 +36,13 @@ def task_kml_to_create_batch(*args, **kwargs):
     temp_remove(kwargs["file"])
     if get_log(kwargs["log"]).status == 205:
         keep_track(log=kwargs["log"], append_message="Success!", status=210)
+
+
+@app.task(bind=True, max_retries=3, retry_backoff=1)
+def task_view_push_to_layer(*args, **kwargs):
+    """TBD"""
+    keep_track(log=kwargs["log"], message="Processing.", status=205)
+    view_push_to_layer(*args, **kwargs)
+    if get_log(kwargs["log"]).status == 205:
+        keep_track(log=kwargs["log"], append_message="Success!", status=210)
+
