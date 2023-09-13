@@ -6,4 +6,3 @@ __pycache__
 settings.toml
 settings.local*.toml
 settings.min*.toml
-poetry.lock
