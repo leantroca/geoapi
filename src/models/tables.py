@@ -106,10 +106,6 @@ class Layers(Base):
     __tablename__ = "layers"
 
     name = Column(String, nullable=False, unique=True)
-    # style_id = Column(
-    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    # )
-    # style = relationship("Styles", backref="layers")
 
 
 class Batches(Base):
@@ -159,6 +155,10 @@ class Batches(Base):
     layer = relationship("Layers", backref="batches")
 
     @property
+    def layer_name(self):
+        return self.layer.name if self.layer else None
+
+    @property
     def record(self):
         """
         Devuelve un diccionario con los campos relevantes del lote.
@@ -170,8 +170,8 @@ class Batches(Base):
         return clean_nones(
             {
                 "id": self.id,
-                "layer": self.layer.name,
-                "geometries": len(self.geometries),
+                "layer": self.layer_name,
+                "geometries": [geometry.id for geometry in self.geometries],
                 "obra": self.obra,
                 "operatoria": self.operatoria,
                 "provincia": self.provincia,

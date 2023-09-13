@@ -1,7 +1,7 @@
 from flask_restx import Resource
 from requests.exceptions import HTTPError
 
-from api.logger import keep_track
+from api.logger import keep_track, is_jsonable
 from utils.postgis_interface import PostGIS
 
 from . import namespace
@@ -23,6 +23,7 @@ class EndpointServer(Resource):
             layer=None,
             status=200,
             message="Received.",
+            json={key: value for key, value in kwargs.items() if is_jsonable(value)},
         )
 
 

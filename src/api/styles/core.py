@@ -51,6 +51,7 @@ def push_sld_to_style(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     sld = SLD(file)
     try:
         geoserver.push_style(
@@ -88,6 +89,7 @@ def assign_style_to_layer(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     geoserver.assign_style(
         style=style,
         layer=layer,
@@ -119,6 +121,7 @@ def delete_style_from_server(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     geoserver.delete_style(
         style=style,
         purge=True,

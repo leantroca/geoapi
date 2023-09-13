@@ -6,7 +6,7 @@ import pandas
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from models.tables import Layers, Logs
+from models.tables import Layers, Logs, Batches
 from utils.config import settings
 
 
@@ -49,7 +49,7 @@ class PostGIS:
         self._password = password or settings.__getattribute__("POSTGIS_PASS")
         self._database = database or settings.__getattribute__("POSTGIS_DATABASE")
         self._schema = schema or settings.__getattribute__("POSTGIS_SCHEMA")
-        self._driver = driver or settings.__getattribute__("POSTGIS_DRIVER")
+        self._driver = driver or settings.__getattribute__("POSTGIS_DRIVER") or "postgresql+psycopg2"
         self._coordsys = (
             coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
         )
@@ -113,6 +113,15 @@ class PostGIS:
         if not self._session:
             self.create_session()
         return self._session
+
+    @property
+    def status(self) -> bool:
+        try:
+            self.engine.connect()
+            self.list_tables()
+        except sqlalchemy.exc.OperationalError:
+            return False
+        return True
 
     def set(self, **kwargs) -> None:
         """
@@ -401,3 +410,19 @@ class PostGIS:
             dict: Registro correspondiente al ID proporcionado.
         """
         return getattr(self.get_log(id=id), "record", None)
+
+    def get_batch(self, id: Union[int, Batches]) -> Batches:
+        return self.session.query(Batches).get(id) if isinstance(id, int) else id
+
+    def get_batch_record(self, id: int) -> dict:
+        """
+        Obtiene el registro de un registro de batch de la base de datos.
+
+        Args:
+            id (int): ID del batch.
+
+        Returns:
+            dict: Registro correspondiente al ID proporcionado.
+        """
+        return getattr(self.get_batch(id=id), "record", None)
+

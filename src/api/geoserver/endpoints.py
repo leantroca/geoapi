@@ -1,12 +1,13 @@
 from flask_restx import Resource
 
-from api.logger import debug_metadata, keep_track
+from api.logger import debug_metadata, keep_track, get_log_response, is_jsonable
+from api.utils import temp_store, temp_remove
 
 from . import namespace
 from .core import (
-    get_log_response,
-    temp_remove,
-    temp_store,
+    # get_log_response,
+    # temp_remove,
+    # temp_store,
     verify_layer_exists,
     verify_layer_not_exists,
 )
@@ -26,6 +27,7 @@ class EndpointServer(Resource):
             layer=kwargs["layer"],
             status=200,
             message="Received.",
+            json={key: value for key, value in kwargs.items() if is_jsonable(value)},
         )
 
 
@@ -72,7 +74,8 @@ class KMLFormCreate(EndpointServer):
         try:
             kwargs["file"] = temp_store(kwargs["file"])
             verify_layer_not_exists(kwargs["layer"])
-            task_kml_to_create_layer.delay(**kwargs, log=log.id)
+            log_id = log if isinstance(log, int) else log.id
+            task_kml_to_create_layer.delay(**kwargs, log=log_id)
         except ValueError as error:
             keep_track(
                 log=log,
@@ -127,7 +130,8 @@ class KMLFormAppend(EndpointServer):
         try:
             kwargs["file"] = temp_store(kwargs["file"])
             verify_layer_exists(kwargs["layer"])
-            task_kml_to_append_layer.delay(**kwargs, log=log.id)
+            log_id = log if isinstance(log, int) else log.id
+            task_kml_to_append_layer.delay(**kwargs, log=log_id)
         except ValueError as error:
             keep_track(
                 log=log,
@@ -136,7 +140,7 @@ class KMLFormAppend(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
             temp_remove(kwargs["file"])
-        return (log.record, log.status)
+        return get_log_response(log)
 
 
 @namespace.route("/url/form/create")
@@ -182,7 +186,8 @@ class URLFormCreate(EndpointServer):
         try:
             kwargs["file"] = temp_store(kwargs["file"])
             verify_layer_not_exists(kwargs["layer"])
-            task_kml_to_create_layer.delay(**kwargs, log=log.id)
+            log_id = log if isinstance(log, int) else log.id
+            task_kml_to_create_layer.delay(**kwargs, log=log_id)
         except ValueError as error:
             keep_track(
                 log=log,
@@ -191,7 +196,7 @@ class URLFormCreate(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
             temp_remove(kwargs["file"])
-        return (log.record, log.status)
+        return get_log_response(log)
 
 
 @namespace.route("/url/form/append")
@@ -237,7 +242,8 @@ class URLFormAppend(EndpointServer):
         try:
             kwargs["file"] = temp_store(kwargs["file"])
             verify_layer_exists(kwargs["layer"])
-            task_kml_to_append_layer.delay(**kwargs, log=log.id)
+            log_id = log if isinstance(log, int) else log.id
+            task_kml_to_append_layer.delay(**kwargs, log=log_id)
         except ValueError as error:
             keep_track(
                 log=log,
@@ -246,7 +252,7 @@ class URLFormAppend(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
             temp_remove(kwargs["file"])
-        return (log.record, log.status)
+        return get_log_response(log)
 
 
 @namespace.route("/layer/form/delete")
@@ -277,5 +283,6 @@ class DeleteLayer(EndpointServer):
         """
         kwargs = parse_kwargs(delete_layer_parser)
         log = self.logger(**kwargs)
-        task_delete_layer.delay(**kwargs, log=log.id)
-        return (log.record, log.status)
+        log_id = log if isinstance(log, int) else log.id
+        task_delete_layer.delay(**kwargs, log=log_id)
+        return get_log_response(log)

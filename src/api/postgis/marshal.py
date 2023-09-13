@@ -23,9 +23,7 @@ def parse_kwargs(parser):
     form = parser.parse_args()
     required = [arg.dest for arg in parser.args if arg.required]
     optional = [arg.dest for arg in parser.args if not arg.required]
-    kwargs = {
-        "layer": secure_filename(form.layer),
-    }
+    kwargs = {}
     for arg in required:
         kwargs[arg] = getattr(form, arg)
     body = json.loads(getattr(form, "json") or "{}")
@@ -47,55 +45,9 @@ def parse_kwargs(parser):
 
 
 
-# kml_error_handle = reqparse.Argument(
-#     "error_handle",
-#     dest="error_handle",
-#     location="form",
-#     type=str,
-#     required=False,
-#     default="fail",
-#     choices=["fail", "replace", "drop"],
-# )
-
-layer_error_handle = reqparse.Argument(
-    "error_handle",
-    dest="error_handle",
-    location="form",
-    type=str,
-    required=False,
-    default="fail",
-    choices=["fail", "ignore"],
-)
-
-delete_geometries = reqparse.Argument(
-    "delete_geometries",
-    dest="delete_geometries",
-    location="form",
-    type=bool,
-    required=False,
-    default=True,
-)
-
-
-upload_kml_parser = form_maker(
+kml_to_geometries_parser = form_maker(
     base_arguments["file"],
-    base_arguments["layer"],
     *batch_arguments.values(),
     base_arguments["metadata"],
     kml_read_error_handle,
-)
-
-download_kml_parser = form_maker(
-    base_arguments["url"],
-    base_arguments["layer"],
-    *batch_arguments.values(),
-    base_arguments["metadata"],
-    kml_read_error_handle,
-)
-
-delete_layer_parser = form_maker(
-    base_arguments["layer"],
-    delete_geometries,
-    base_arguments["metadata"],
-    layer_error_handle,
 )

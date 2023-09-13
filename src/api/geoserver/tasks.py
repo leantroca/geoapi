@@ -1,12 +1,14 @@
 from api.celery import app
-from api.logger import keep_track
+from api.logger import keep_track, get_log, get_log_response
+
+from api.utils import temp_remove
 
 from .core import (
     delete_layer,
-    get_log,
+    # get_log,
     kml_to_append_layer,
     kml_to_create_layer,
-    temp_remove,
+    # temp_remove,
 )
 
 
