@@ -1,5 +1,6 @@
 import os
 from types import SimpleNamespace
+from typing import Optional
 
 import toml
 
@@ -8,7 +9,7 @@ PROJECT_DIR = os.environ.get(
     "PROJECT_DIR", os.path.abspath(os.path.dirname(os.getcwd()))
 )
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
-
+SETTINGS = os.environ.get("SETTINGS")
 
 # Ubicaciones por defecto del archivo settings.toml.
 fallback_locations = [
@@ -22,7 +23,7 @@ fallback_locations = [
 
 
 def load_toml_file(path: str = None):
-    if path:
+    if path is not None:
         return toml.load(path)
     for fallback in fallback_locations:
         try:
@@ -39,16 +40,16 @@ def load_toml_file(path: str = None):
 
 
 def get_settings(
-    path: str = os.path.join(PROJECT_DIR, "api", "settings.toml"),
-    environment: str = ENVIRONMENT,
+    settings: Optional[str] = None,
+    environment: Optional[str] = None,
     **kwargs,
 ) -> SimpleNamespace:
     """
     Esta función carga los valores establecidos por el usuario relacionados a la
     "infraestructura" de los servidores (urls, puertos, usuarios, contraseñas, etc.).
     """
-    toml_file = load_toml_file()
-    environment = environment or [*toml_file.keys()][0]
+    toml_file = load_toml_file(path=settings or SETTINGS)
+    environment = environment or ENVIRONMENT or [*toml_file.keys()][0]
     return SimpleNamespace(
         PROJECT_DIR=PROJECT_DIR,
         ENVIRONMENT=environment,
@@ -61,4 +62,4 @@ def get_settings(
 
 # Se definen los settings que usa el proyecto. Cualquier variable que haya sido
 # seteada como envrionment variable sobreescribe a la definidas en los settings.
-settings = get_settings(os.environ)
+settings = get_settings(**dict(os.environ))

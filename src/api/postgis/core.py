@@ -1,5 +1,6 @@
 import os
-from typing import Optional, Union
+import re
+from typing import Optional, Union, List
 
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
@@ -107,3 +108,43 @@ def view_push_to_layer(
     )
     log.message_append("Geoserver layer created.")
     postgis.session.commit()
+
+
+def delete_geometries(
+    geometry_id: Union[str, List[str]],
+    error_handle: str = "fail",
+    log: Optional[int] = None,
+    *args,
+    **kwargs,
+):
+    """TBD"""
+    log = get_log(log) if isinstance(log, int) else log or Logs()
+    if isinstance(geometry_id, str):
+        geometry_id = re.findall(r'\b\d+\b', geometry_id)
+    count = postgis.session.query(Geometries).filter(Geometries.id.in_(geometry_id)).delete()
+    if error_handle == "fail" and len(set(geometry_id)) != count:
+        postgis.session.rollback()
+        raise ValueError("Some requested geometries don't exist. This error can be handled using 'ignore'.")
+    log.message_append(f"Postgis deleted {count} geometries.")
+    postgis.session.commit()
+
+
+
+def delete_batches(
+    batch_id: Union[str, List[str]],
+    error_handle: str = "fail",
+    log: Optional[int] = None,
+    *args,
+    **kwargs,
+):
+    """TBD"""
+    log = get_log(log) if isinstance(log, int) else log or Logs()
+    if isinstance(batch_id, str):
+        batch_id = re.findall(r'\b\d+\b', batch_id)
+    count = postgis.session.query(Batches).filter(Batches.id.in_(batch_id)).delete()
+    if error_handle == "fail" and len(set(batch_id)) != count:
+        postgis.session.rollback()
+        raise ValueError("Some requested batches don't exist. This error can be handled using 'ignore'.")
+    log.message_append(f"Postgis deleted {count} batches.")
+    postgis.session.commit()
+

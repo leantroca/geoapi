@@ -333,6 +333,7 @@ class PostGIS:
             """
         )
 
+
     def count_layer_geometries(self, layer: str):
         """
         Obtiene el número de geometrías en una capa.
