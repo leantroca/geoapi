@@ -56,6 +56,10 @@ def form_maker(*args):
     return request_parser
 
 
+def is_true(value):
+  return value.lower() == 'true'
+
+
 base_arguments = {
     "layer": reqparse.Argument(
         "layer",

@@ -110,6 +110,7 @@ def view_push_to_layer(
     postgis.session.commit()
 
 
+@core_exception_logger
 def delete_geometries(
     geometry_id: Union[str, List[str]],
     error_handle: str = "fail",
@@ -119,19 +120,15 @@ def delete_geometries(
 ):
     """TBD"""
     log = get_log(log) if isinstance(log, int) else log or Logs()
-    if isinstance(geometry_id, str):
-        geometry_id = re.findall(r'\b\d+\b', geometry_id)
-    count = postgis.session.query(Geometries).filter(Geometries.id.in_(geometry_id)).delete()
-    if error_handle == "fail" and len(set(geometry_id)) != count:
-        postgis.session.rollback()
-        raise ValueError("Some requested geometries don't exist. This error can be handled using 'ignore'.")
-    log.message_append(f"Postgis deleted {count} geometries.")
+    count = postgis.drop_geometries(geometry_id)
+    log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
 
 
-
+@core_exception_logger
 def delete_batches(
     batch_id: Union[str, List[str]],
+    cascade: bool = False,
     error_handle: str = "fail",
     log: Optional[int] = None,
     *args,
@@ -139,12 +136,10 @@ def delete_batches(
 ):
     """TBD"""
     log = get_log(log) if isinstance(log, int) else log or Logs()
-    if isinstance(batch_id, str):
-        batch_id = re.findall(r'\b\d+\b', batch_id)
-    count = postgis.session.query(Batches).filter(Batches.id.in_(batch_id)).delete()
-    if error_handle == "fail" and len(set(batch_id)) != count:
-        postgis.session.rollback()
-        raise ValueError("Some requested batches don't exist. This error can be handled using 'ignore'.")
-    log.message_append(f"Postgis deleted {count} batches.")
+    print(f"CORE {args=}")
+    print(f"CORE {kwargs=}")
+    print(f"CORE {cascade=}")
+    count = postgis.drop_batches(batch_id, cascade=cascade)
+    log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
 

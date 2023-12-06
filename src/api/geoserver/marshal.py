@@ -3,7 +3,7 @@ import json
 from flask_restx import reqparse
 from werkzeug.utils import secure_filename
 
-from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker
+from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker, is_true
 from utils.general import clean_nones
 
 
@@ -37,7 +37,12 @@ def parse_kwargs(parser):
         }
     )
     for arg in optional:
-        kwargs[arg] = body.pop(arg, None)
+        if arg in ["delete_geometries"]:
+            # Handle booleans as intended.
+            kwargs[arg] = is_true(body.pop(arg, None))
+        else:
+            # Handles everything else.
+            kwargs[arg] = body.pop(arg, None)
     if [arg for arg in parser.args if arg.name == "url"]:
         kwargs["file"] = [
             element.strip(" ,\"'[](){{}}") for element in kwargs["file"].split(",")
@@ -71,9 +76,10 @@ delete_geometries = reqparse.Argument(
     "delete_geometries",
     dest="delete_geometries",
     location="form",
-    type=bool,
+    type=str,
     required=False,
-    default=True,
+    default="false",
+    choices=["true", "false"]
 )
 
 

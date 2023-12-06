@@ -3,7 +3,7 @@ import json
 from flask_restx import reqparse
 from werkzeug.utils import secure_filename
 
-from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker
+from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker, is_true
 from utils.general import clean_nones
 
 
@@ -35,11 +35,17 @@ def parse_kwargs(parser):
         }
     )
     for arg in optional:
-        kwargs[arg] = body.pop(arg, None)
+        if arg in ["cascade"]:
+            # Handle booleans as intended.
+            kwargs[arg] = is_true(body.pop(arg, None))
+        else:
+            # Handles everything else.
+            kwargs[arg] = body.pop(arg, None)
     if [arg for arg in parser.args if arg.name == "url"]:
         kwargs["file"] = [
             element.strip(" ,\"'[](){{}}") for element in kwargs["file"].split(",")
         ]
+
     kwargs["json"] = body
     return clean_nones(kwargs)
 
@@ -90,6 +96,16 @@ missing_batch_error_handle = reqparse.Argument(
     choices=["fail", "ignore"],
 )
 
+cascade = reqparse.Argument(
+    "cascade",
+    dest="cascade",
+    location="form",
+    type=str,
+    required=False,
+    default="false",
+    choices=["true", "false"]
+)
+
 kml_to_geometries_parser = form_maker(
     base_arguments["file"],
     *batch_arguments.values(),
@@ -119,5 +135,6 @@ delete_geometry_parser = form_maker(
 delete_batch_parser = form_maker(
     batch_id,
     base_arguments["metadata"],
+    cascade,
     missing_batch_error_handle,
 )

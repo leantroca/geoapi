@@ -1,12 +1,12 @@
 import re
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, List
 from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from models.tables import Layers, Logs, Batches
+from models.tables import Layers, Logs, Batches, Geometries
 from utils.config import settings
 
 
@@ -333,6 +333,89 @@ class PostGIS:
             """
         )
 
+    def drop_batches(
+        self,
+        ids: Union[str, int, List[str], List[int]],
+        cascade: bool = False,
+    ):
+        """
+        Elimina Batches según una lista de ids. Si se ejecuta en modo
+        cascade: elimina geometrías que dependen de los batches y anula relaciones
+        con Logs generados.
+        """
+        # Assert to deal with a list of indexes
+        if isinstance(ids, str):
+            ids = re.findall(r"\b\d+\b", ids)
+        elif isinstance(ids, int):
+            ids = [ids]
+        geometries_deleted = 0
+        with self.engine.begin() as transaction:
+            geometries_remaining = self.session.query(Geometries).filter(Geometries.batch_id.in_(ids)).count()
+            print(f"{ids=}")
+            print(f"{geometries_remaining=}")
+            if cascade:
+                geometries_deleted = geometries_remaining
+                # Run cascade efect
+                transaction.execute(
+                    """
+                        UPDATE {schema}.logs
+                        SET batch_id = NULL
+                        WHERE batch_id IN ({ids}) ;
+                    """.format(
+                        schema=self.schema,
+                        ids=", ".join(str(i) for i in ids)
+                    )
+                )
+                transaction.execute(
+                    """
+                        DELETE FROM {schema}.geometries
+                        WHERE batch_id IN ({ids}) ;
+                    """.format(
+                        schema=self.schema,
+                        ids=", ".join(str(i) for i in ids)
+                    )
+                )
+            elif geometries_remaining > 0:
+                raise Exception(f"Batch deletion prevented! There are {geometries_remaining} geometries attached to"
+                " this batch. Set 'cascade' to true to proceed with Geometry deletion as well.")
+            # Delete batches
+            transaction.execute(
+                """
+                    DELETE FROM {schema}.geometries
+                    WHERE batch_id IN ({ids}) ;
+                """.format(
+                    schema=self.schema,
+                    ids=", ".join(str(i) for i in ids)
+                )
+            )
+            # self.session.commit()
+        return geometries_deleted
+
+    def drop_geometries(
+        self,
+        ids: Union[str, int, List[str], List[int]],
+        cascade: bool = False,
+    ):
+        """
+        Elimina geometrías en base a una lista de ids.
+        """
+        if isinstance(ids, str):
+            ids = re.findall(r"\b\d+\b", ids)
+        elif isinstance(ids, int):
+            ids = [ids]
+        geometries_deleted = self.session.query(Geometries).filter(Geometries.id.in_(ids)).count()
+        with self.engine.begin() as transaction:
+            transaction.execute(
+                """
+                    DELETE FROM {schema}.geometries
+                    WHERE id IN ({ids}) ;
+                """.format(
+                    schema=self.schema,
+                    ids=", ".join(str(i) for i in ids)
+                )
+            )
+            # self.session.commit()
+        return geometries_deleted
 
     def count_layer_geometries(self, layer: str):
         """

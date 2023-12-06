@@ -48,8 +48,6 @@ def task_view_push_to_layer(*args, **kwargs):
 def task_delete_geometries(*args, **kwargs):
     """TBD"""
     keep_track(log=kwargs["log"], message="Processing.", status=205)
-    print(f"{args=}")
-    print(f"{kwargs=}")
     delete_geometries(**kwargs)
     if get_log(kwargs["log"]).status == 205:
         keep_track(log=kwargs["log"], append_message="Success!", status=210)
@@ -58,6 +56,8 @@ def task_delete_geometries(*args, **kwargs):
 @app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_delete_batches(*args, **kwargs):
     """TBD"""
+    print(f"TASK {args=}")
+    print(f"TASK {kwargs=}")
     keep_track(log=kwargs["log"], message="Processing.", status=205)
     delete_batches(**kwargs)
     if get_log(kwargs["log"]).status == 205:

@@ -14,9 +14,6 @@ from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 from utils.config import settings
 from utils.general import clean_nones
 
-# def clean_nones(kwargs: dict) -> dict:
-#     return {key: value for key, value in kwargs.items() if value not in [None, {}]}
-
 
 def declarative_base(cls):
     return declarative.declarative_base(
@@ -258,10 +255,6 @@ class Logs(Base):
         Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True
     )
     batch = relationship("Batches", backref="logs")
-    # style_id = Column(
-    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    # )
-    # style = relationship("Styles", backref="logs")
 
     def __init__(self):
         Base.__init__(self)
@@ -329,17 +322,3 @@ class Logs(Base):
 @event.listens_for(Logs, "before_update")
 def autoupdate_logs(mapper, connection, log):
     log.url = log.get_url()
-
-
-# class Styles(Base):
-#     """
-#     Definición de tabla para estilos (styles).
-
-#     Atributos:
-#         __tablename__ (str): Nombre de la tabla en la base de datos.
-#         name (Column): Columna de tipo String que representa el nombre del estilo.
-#     """
-
-#     __tablename__ = "styles"
-
-#     name = Column(String, nullable=False, unique=True)
