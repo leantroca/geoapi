@@ -335,7 +335,7 @@ class PostGIS:
 
     def drop_batches(
         self,
-        ids: Union[str, int, List[str], List[int]],
+        ids: Union[int, List[int]],
         cascade: bool = False,
     ):
         """
@@ -344,15 +344,11 @@ class PostGIS:
         con Logs generados.
         """
         # Assert to deal with a list of indexes
-        if isinstance(ids, str):
-            ids = re.findall(r"\b\d+\b", ids)
-        elif isinstance(ids, int):
+        if isinstance(ids, int):
             ids = [ids]
         geometries_deleted = 0
         with self.engine.begin() as transaction:
             geometries_remaining = self.session.query(Geometries).filter(Geometries.batch_id.in_(ids)).count()
-            print(f"{ids=}")
-            print(f"{geometries_remaining=}")
             if cascade:
                 geometries_deleted = geometries_remaining
                 # Run cascade efect
@@ -393,15 +389,13 @@ class PostGIS:
 
     def drop_geometries(
         self,
-        ids: Union[str, int, List[str], List[int]],
+        ids: Union[int, List[int]],
         cascade: bool = False,
     ):
         """
         Elimina geometrías en base a una lista de ids.
         """
-        if isinstance(ids, str):
-            ids = re.findall(r"\b\d+\b", ids)
-        elif isinstance(ids, int):
+        if isinstance(ids, int):
             ids = [ids]
         geometries_deleted = self.session.query(Geometries).filter(Geometries.id.in_(ids)).count()
         with self.engine.begin() as transaction:
@@ -510,8 +504,10 @@ class PostGIS:
         """
         return getattr(self.get_batch(id=id), "record", None)
 
-    def get_layer(self, id: Union[int, Logs]=None, name:str=None):
-        """TBD"""
+    def get_layer(self, id: Optional[int]=None, name:Optional[str]=None):
+        """
+        Devuelve el objeto de un capa existente.
+        """
         if id:
             return self.session.query(Layers).get(id) if isinstance(id, int) else id
         elif name:
@@ -519,6 +515,8 @@ class PostGIS:
         else:
             return None
 
-    def get_or_create_layer(self, id: Union[int, Logs]=None, name:str=None):
-        """TBD"""
+    def get_or_create_layer(self, id: Optional[int]=None, name:Optional[str]=None):
+        """
+        Devuelve el objeto de una capa existente o la crea en caso de no existir.
+        """
         return self.get_layer(id=id, name=name) or Layers(name=name)

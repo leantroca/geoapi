@@ -50,17 +50,18 @@ def parse_kwargs(parser):
     return clean_nones(kwargs)
 
 
-geometry_id = reqparse.Argument(
-    "geometry_id",
-    dest="geometry_id",
-    location="form",
-    type=str,
-    required=False,
-)
+def parse_ids(kwargs) -> dict:
+    """
+    Parses ids into a list of ints.
+    """
+    if "ids" in kwargs:
+        kwargs["ids"] = [int(val) for val in re.find_all(r"\b\d+\b", kwargs["ids"])]
+    return kwargs
 
-batch_id = reqparse.Argument(
-    "batch_id",
-    dest="batch_id",
+
+ids = reqparse.Argument(
+    "ids",
+    dest="ids",
     location="form",
     type=str,
     required=False,
@@ -127,13 +128,13 @@ view_to_push_parser = form_maker(
 )
 
 delete_geometry_parser = form_maker(
-    geometry_id,
+    ids,
     base_arguments["metadata"],
     missing_geometry_error_handle,
 )
 
 delete_batch_parser = form_maker(
-    batch_id,
+    ids,
     base_arguments["metadata"],
     cascade,
     missing_batch_error_handle,

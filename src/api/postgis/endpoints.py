@@ -13,6 +13,7 @@ from . import namespace
 # )
 from .marshal import (
     parse_kwargs,
+    parse_ids,
     kml_to_geometries_parser,
     url_to_geometries_parser,
     view_to_push_parser,
@@ -212,6 +213,7 @@ class DeleteGeometry(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_geometry_parser)
+        kwargs = parse_ids(kwargs)
         log_id = self.logger(**kwargs).id
         task_delete_geometries.delay(**kwargs, log=log_id)
         return get_log_response(log_id)
@@ -241,6 +243,7 @@ class DeleteBatch(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_batch_parser)
+        kwargs = parse_ids(kwargs)
         log_id = self.logger(**kwargs).id
         print(f"ENDPOINT {kwargs=}")
         task_delete_batches.delay(**kwargs, log=log_id)

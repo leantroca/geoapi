@@ -112,7 +112,7 @@ def view_push_to_layer(
 
 @core_exception_logger
 def delete_geometries(
-    geometry_id: Union[str, List[str]],
+    geometry_id: Union[int, List[int]],
     error_handle: str = "fail",
     log: Optional[int] = None,
     *args,
@@ -127,7 +127,7 @@ def delete_geometries(
 
 @core_exception_logger
 def delete_batches(
-    batch_id: Union[str, List[str]],
+    batch_id: Union[int, List[int]],
     cascade: bool = False,
     error_handle: str = "fail",
     log: Optional[int] = None,
@@ -136,9 +136,6 @@ def delete_batches(
 ):
     """TBD"""
     log = get_log(log) if isinstance(log, int) else log or Logs()
-    print(f"CORE {args=}")
-    print(f"CORE {kwargs=}")
-    print(f"CORE {cascade=}")
     count = postgis.drop_batches(batch_id, cascade=cascade)
     log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
