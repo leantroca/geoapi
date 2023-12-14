@@ -96,7 +96,16 @@ def view_push_to_layer(
     **kwargs,
 ):
     """
-    TBD
+    Crea una nueva capa en Geoserver y registra la acción en el log.
+
+    Args:
+    - layer (str): Nombre de la capa a crear en Geoserver.
+    - error_handle (str): Manejo de errores si la capa ya existe ("fail" o "replace").
+    - log (Logs): Objeto de log opcional para registrar la acción.
+
+    Keyword Args:
+    - kwargs: Otros argumentos opcionales.
+
     """
     log = get_log(log) if isinstance(log, int) else log or Logs()
     new_layer = postgis.get_or_create_layer(name=layer)
@@ -118,7 +127,19 @@ def delete_geometries(
     *args,
     **kwargs,
 ):
-    """TBD"""
+    """
+    Elimina geometrías de PostGIS y registra la acción en el log.
+
+    Args:
+    - geometry_id (Union[int, List[int]]): ID o lista de IDs de geometrías a eliminar.
+    - error_handle (str): Manejo de errores ("fail" o "replace").
+    - log (Optional[int]): Objeto de log opcional para registrar la acción.
+
+    Keyword Args:
+    - args: Argumentos posicionales adicionales.
+    - kwargs: Otros argumentos opcionales.
+
+    """
     log = get_log(log) if isinstance(log, int) else log or Logs()
     count = postgis.drop_geometries(geometry_id)
     log.message = f"Postgis deleted {count} geometries."
@@ -134,7 +155,20 @@ def delete_batches(
     *args,
     **kwargs,
 ):
-    """TBD"""
+    """
+    Elimina lotes de geometrías en PostGIS y registra la acción en el log.
+
+    Args:
+    - batch_id (Union[int, List[int]]): ID o lista de IDs de lotes a eliminar.
+    - cascade (bool): Indica si se deben eliminar en cascada las dependencias.
+    - error_handle (str): Manejo de errores ("fail" o "replace").
+    - log (Optional[int]): Objeto de log opcional para registrar la acción.
+
+    Keyword Args:
+    - args: Argumentos posicionales adicionales.
+    - kwargs: Otros argumentos opcionales.
+    
+    """
     log = get_log(log) if isinstance(log, int) else log or Logs()
     count = postgis.drop_batches(batch_id, cascade=cascade)
     log.message = f"Postgis deleted {count} geometries."

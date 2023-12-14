@@ -12,6 +12,16 @@ from api.celery import postgis
 
 
 def core_exception_logger(target):
+    """
+    Decorador para manejar excepciones y registrar información en un log.
+
+    Args:
+    - target: Función objetivo a decorar.
+
+    Returns:
+    - wrapper: Función envoltorio.
+
+    """
     def wrapper(*args, **kwargs):
         log_id = kwargs.get("log") or keep_track()
         log_id = log_id.id if isinstance(log_id, Logs) else log_id
@@ -42,6 +52,16 @@ def core_exception_logger(target):
 
 
 def debug_metadata(**kwargs) -> dict:
+    """
+    Genera metadatos para depuración, eliminando valores 'None' y obteniendo nombres base de archivos.
+
+    Args:
+    - kwargs: Argumentos de la función.
+
+    Returns:
+    - dict: Metadatos depurados.
+
+    """
     return clean_nones(
         {
             key: value
@@ -98,17 +118,37 @@ def get_log(id: Union[int, Logs]):
           sin realizar ninguna operación adicional.
         - Si se proporciona un ID entero, se utilizará el módulo postgis.get_log para
           recuperar el registro de registro correspondiente.
+
     """
     return postgis.get_log(id=id) if isinstance(id, int) else id
 
 
 def get_log_response(id: Union[int, Logs]):
-    """TBD"""
+    """
+    Obtiene una respuesta de log unificada.
+
+    Args:
+    - id (Union[int, Logs]): ID del log o un objeto Log.
+
+    Returns:
+    - tuple: Una tupla que contiene el registro del log y su estado.
+
+    """
     log = get_log(id=id)
     return log.record, log.status
 
 
 def is_jsonable(obj):
+    """
+    Verifica si un objeto es serializable a JSON.
+
+    Args:
+    - obj: El objeto a verificar.
+
+    Returns:
+    - bool: True si el objeto es serializable a JSON, False en caso contrario.
+
+    """
     try:
         json.dumps(obj)
         return True

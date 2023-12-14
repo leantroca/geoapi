@@ -245,6 +245,5 @@ class DeleteBatch(EndpointServer):
         kwargs = parse_kwargs(delete_batch_parser)
         kwargs = parse_ids(kwargs)
         log_id = self.logger(**kwargs).id
-        print(f"ENDPOINT {kwargs=}")
         task_delete_batches.delay(**kwargs, log=log_id)
         return get_log_response(log_id)

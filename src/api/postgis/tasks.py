@@ -37,7 +37,14 @@ def task_kml_to_create_batch(*args, **kwargs):
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_view_push_to_layer(*args, **kwargs):
-    """TBD"""
+    """
+    Realiza la tarea de crear una capa en Geoserver y actualiza el log.
+
+    Args:
+    - args: Argumentos posicionales.
+    - kwargs: Argumentos clave-valor.
+
+    """
     keep_track(log=kwargs["log"], message="Processing.", status=205)
     view_push_to_layer(*args, **kwargs)
     if get_log(kwargs["log"]).status == 205:
@@ -46,7 +53,14 @@ def task_view_push_to_layer(*args, **kwargs):
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_delete_geometries(*args, **kwargs):
-    """TBD"""
+    """
+    Realiza la tarea de eliminar geometrías y actualiza el log.
+
+    Args:
+    - args: Argumentos posicionales.
+    - kwargs: Argumentos clave-valor.
+
+    """
     keep_track(log=kwargs["log"], message="Processing.", status=205)
     delete_geometries(**kwargs)
     if get_log(kwargs["log"]).status == 205:
@@ -55,9 +69,14 @@ def task_delete_geometries(*args, **kwargs):
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)
 def task_delete_batches(*args, **kwargs):
-    """TBD"""
-    print(f"TASK {args=}")
-    print(f"TASK {kwargs=}")
+    """
+    Realiza la tarea de eliminar lotes y actualiza el log.
+
+    Args:
+    - args: Argumentos posicionales.
+    - kwargs: Argumentos clave-valor.
+
+    """
     keep_track(log=kwargs["log"], message="Processing.", status=205)
     delete_batches(**kwargs)
     if get_log(kwargs["log"]).status == 205:
