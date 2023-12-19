@@ -3,7 +3,7 @@ from typing import Literal, Union
 from requests.exceptions import HTTPError
 from werkzeug.datastructures import FileStorage
 
-from api.logger import core_exception_logger
+from api.logger import core_exception_logger, get_log
 from models.tables import Logs
 from utils.geoserver_interface import Geoserver
 from utils.sld_interface import SLD
@@ -29,6 +29,7 @@ def push_sld_to_style(
     style: str,
     error_handle: Literal["fail", "replace", "ignore"] = "fail",
     log: Union[int, Logs] = None,
+    **kwargs,
 ):
     """
     Carga una definición de estilo SLD en un estilo en el servidor Geoserver.
@@ -51,6 +52,7 @@ def push_sld_to_style(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     sld = SLD(file)
     try:
         geoserver.push_style(
@@ -71,6 +73,7 @@ def assign_style_to_layer(
     style: str,
     layer: str,
     log: Union[int, Logs] = None,
+    **kwargs,
 ):
     """
     Asigna un estilo a una capa en el servidor Geoserver.
@@ -88,6 +91,7 @@ def assign_style_to_layer(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     geoserver.assign_style(
         style=style,
         layer=layer,
@@ -100,6 +104,7 @@ def delete_style_from_server(
     style: str,
     error_handle: Literal["fail", "cascade"] = "fail",
     log: Union[int, Logs] = None,
+    **kwargs,
 ):
     """
     Elimina un estilo del servidor Geoserver.
@@ -119,6 +124,7 @@ def delete_style_from_server(
     Returns:
         None
     """
+    log = get_log(id=log) if isinstance(log, int) else log
     geoserver.delete_style(
         style=style,
         purge=True,

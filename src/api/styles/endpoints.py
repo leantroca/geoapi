@@ -23,6 +23,7 @@ class EndpointServer(Resource):
             layer=None,
             status=200,
             message="Received.",
+            json={key: value for key, value in kwargs.items() if key != "file"},
         )
 
 

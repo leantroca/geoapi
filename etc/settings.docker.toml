@@ -1,7 +1,5 @@
 [docker]
 
-# Crear archivo etc/settings.toml completando los siguientes campos.
-
 # GeoAPI settings
 BASE_URL="http://localhost:5001/"
 LISTEN_TO="0.0.0.0"
@@ -33,4 +31,39 @@ POSTGIS_TIMEZONE="UTC"
 
 # CELERY Settings
 CELERY_BROKER="redis://redis:6379/0"
+TEMP_BASE="/tmp"
+
+[local]
+
+# GeoAPI settings
+BASE_URL="http://localhost:5001/"
+LISTEN_TO="0.0.0.0"
+PORT=5001
+DEBUG=true
+
+# Data settings
+CLIENT_TIMEZONE="America/Argentina/Buenos_Aires"
+COORDINATE_SYSTEM="EPSG:4326"
+DEFAULT_CHUNKSIZE=50
+
+# Geoserver interface
+GEOSERVER_BASE_URL="http://localhost:8081/"
+GEOSERVER_USERNAME="admin"
+GEOSERVER_PASSWORD="geoserver"
+GEOSERVER_WORKSPACE="geoapi"
+GEOSERVER_DATASTORE="postgis"
+GEOSERVER_STYLE_STORAGE="/opt/geoserver_data/workspaces/geoapi/styles"
+
+# PostGIS interface
+POSTGIS_HOSTNAME="localhost"
+POSTGIS_PORT=5433
+POSTGIS_USER="geoserver"
+POSTGIS_PASS="geoserver"
+POSTGIS_DATABASE="geoserver"
+POSTGIS_SCHEMA="geoapi"
+POSTGIS_DRIVER="postgresql+psycopg2"
+POSTGIS_TIMEZONE="UTC"
+
+# CELERY Settings
+CELERY_BROKER="redis://localhost:6380/0"
 TEMP_BASE="/tmp"

@@ -1,7 +1,7 @@
 import json
+import re
 
 from flask_restx import reqparse
-from werkzeug.utils import secure_filename
 
 from api.utils import (
     base_arguments,
@@ -29,9 +29,7 @@ def parse_kwargs(parser):
     form = parser.parse_args()
     required = [arg.dest for arg in parser.args if arg.required]
     optional = [arg.dest for arg in parser.args if not arg.required]
-    kwargs = {
-        "layer": secure_filename(form.layer),
-    }
+    kwargs = {}
     for arg in required:
         kwargs[arg] = getattr(form, arg)
     body = json.loads(getattr(form, "json") or "{}")
@@ -43,7 +41,7 @@ def parse_kwargs(parser):
         }
     )
     for arg in optional:
-        if arg in ["delete_geometries"]:
+        if arg in ["cascade"]:
             # Handle booleans as intended.
             kwargs[arg] = is_true(body.pop(arg, None))
         else:
@@ -53,21 +51,39 @@ def parse_kwargs(parser):
         kwargs["file"] = [
             element.strip(" ,\"'[](){{}}") for element in kwargs["file"].split(",")
         ]
+
     kwargs["json"] = body
     return clean_nones(kwargs)
 
 
-# kml_error_handle = reqparse.Argument(
-#     "error_handle",
-#     dest="error_handle",
-#     location="form",
-#     type=str,
-#     required=False,
-#     default="fail",
-#     choices=["fail", "replace", "drop"],
-# )
+def parse_ids(kwargs) -> dict:
+    """
+    Parses ids into a list of ints.
+    """
+    if "ids" in kwargs:
+        kwargs["ids"] = [int(val) for val in re.findall(r"\b\d+\b", kwargs["ids"])]
+    return kwargs
+
+
+ids = reqparse.Argument(
+    "ids",
+    dest="ids",
+    location="form",
+    type=str,
+    required=False,
+)
 
 layer_error_handle = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "replace", "ignore"],
+)
+
+missing_geometry_error_handle = reqparse.Argument(
     "error_handle",
     dest="error_handle",
     location="form",
@@ -77,9 +93,19 @@ layer_error_handle = reqparse.Argument(
     choices=["fail", "ignore"],
 )
 
-delete_geometries = reqparse.Argument(
-    "delete_geometries",
-    dest="delete_geometries",
+missing_batch_error_handle = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "ignore"],
+)
+
+cascade = reqparse.Argument(
+    "cascade",
+    dest="cascade",
     location="form",
     type=str,
     required=False,
@@ -87,26 +113,35 @@ delete_geometries = reqparse.Argument(
     choices=["true", "false"],
 )
 
-
-upload_kml_parser = form_maker(
+kml_to_geometries_parser = form_maker(
     base_arguments["file"],
-    base_arguments["layer"],
     *batch_arguments.values(),
     base_arguments["metadata"],
     kml_read_error_handle,
 )
 
-download_kml_parser = form_maker(
+url_to_geometries_parser = form_maker(
     base_arguments["url"],
-    base_arguments["layer"],
     *batch_arguments.values(),
     base_arguments["metadata"],
     kml_read_error_handle,
 )
 
-delete_layer_parser = form_maker(
+view_to_push_parser = form_maker(
     base_arguments["layer"],
-    delete_geometries,
     base_arguments["metadata"],
     layer_error_handle,
+)
+
+delete_geometry_parser = form_maker(
+    ids,
+    base_arguments["metadata"],
+    missing_geometry_error_handle,
+)
+
+delete_batch_parser = form_maker(
+    ids,
+    base_arguments["metadata"],
+    cascade,
+    missing_batch_error_handle,
 )

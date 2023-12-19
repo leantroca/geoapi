@@ -122,7 +122,7 @@ class Geoserver:
         maxx: Union[float, str] = -55.25,
         miny: Union[float, str] = -53.628348965,
         maxy: Union[float, str] = -21.8323104794,
-        if_exists: Literal["fail", "replace"] = "fail",
+        if_exists: Literal["fail", "replace", "ignore"] = "fail",
     ):
         """
         Agrega una capa a Geoserver.
@@ -146,8 +146,13 @@ class Geoserver:
             <enabled>true</enabled>
 
         """
-        if if_exists.lower() == "fail" and layer in self.list_layers():
-            raise ValueError(f"Layer {layer} already exists!")
+        if layer in self.list_layers():
+            if if_exists.lower() == "fail":
+                raise ValueError(f"Layer {layer} already exists!")
+            elif if_exists.lower() == "replace":
+                self.delete_layer(layer=layer)
+            elif if_exists.lower() == "ignore":
+                return
         response = requests.post(
             f"{self.rest_url}/workspaces/{self.workspace}"
             + f"/datastores/{self.datastore}/featuretypes",

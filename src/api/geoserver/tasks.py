@@ -1,13 +1,9 @@
 from api.celery import app
-from api.logger import keep_track
+from api.logger import get_log, keep_track
+from api.utils import temp_remove
 
-from .core import (
-    delete_layer,
-    get_log,
-    kml_to_append_layer,
-    kml_to_create_layer,
-    temp_remove,
-)
+from .core import kml_to_append_layer  # get_log,; temp_remove,
+from .core import delete_layer, kml_to_create_layer
 
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)

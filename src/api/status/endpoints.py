@@ -3,7 +3,7 @@ from flask_restx import Resource
 from utils.geoserver_interface import Geoserver
 
 from . import namespace
-from .core import get_log_record, standard_response
+from .core import get_batch_record, get_log_record, standard_response
 
 geoserver = Geoserver()
 
@@ -75,4 +75,32 @@ class ProcessStatus(Resource):
             endpoint=self.endpoint.replace("_", "/").lower(),
             status=400,
             message=f"Record '{id}' doesn't exist.",
+        )
+
+
+@namespace.route("/batch/<int:id>")
+class BatchStatus(Resource):
+    """
+    Estado del batch.
+
+    Obtiene el registro de estado de un batch por su ID.
+    """
+
+    @namespace.doc("Batch status.")
+    def get(self, id):
+        """
+        Obtiene el registro de estado de un batch por su ID.
+
+        ---
+        ### parameters:
+          - __id__ (requerido): ID del batch.
+        ### responses:
+          - __200__: Registro de batch obtenido correctamente.
+          - __500__: Error interno del servidor.
+        """
+        return get_batch_record(id=id) or standard_response(
+            id=id,
+            endpoint=self.endpoint.replace("_", "/").lower(),
+            status=400,
+            message=f"Batch '{id}' doesn't exist.",
         )

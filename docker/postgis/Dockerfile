@@ -1,4 +1,4 @@
-FROM postgis/postgis:latest
+FROM postgis/postgis:15-master
 
 ENV POSTGRES_DB="geoserver"
 ENV POSTGRES_USER="geoserver"

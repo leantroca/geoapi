@@ -14,9 +14,6 @@ from sqlalchemy.sql.sqltypes import DateTime, Integer, String
 from utils.config import settings
 from utils.general import clean_nones
 
-# def clean_nones(kwargs: dict) -> dict:
-#     return {key: value for key, value in kwargs.items() if value not in [None, {}]}
-
 
 def declarative_base(cls):
     return declarative.declarative_base(
@@ -106,10 +103,6 @@ class Layers(Base):
     __tablename__ = "layers"
 
     name = Column(String, nullable=False, unique=True)
-    # style_id = Column(
-    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    # )
-    # style = relationship("Styles", backref="layers")
 
 
 class Batches(Base):
@@ -159,6 +152,10 @@ class Batches(Base):
     layer = relationship("Layers", backref="batches")
 
     @property
+    def layer_name(self):
+        return self.layer.name if self.layer else None
+
+    @property
     def record(self):
         """
         Devuelve un diccionario con los campos relevantes del lote.
@@ -170,8 +167,8 @@ class Batches(Base):
         return clean_nones(
             {
                 "id": self.id,
-                "layer": self.layer.name,
-                "geometries": len(self.geometries),
+                "layer": self.layer_name,
+                "geometries": [geometry.id for geometry in self.geometries],
                 "obra": self.obra,
                 "operatoria": self.operatoria,
                 "provincia": self.provincia,
@@ -258,10 +255,6 @@ class Logs(Base):
         Integer, ForeignKey("batches.id", ondelete="RESTRICT"), nullable=True
     )
     batch = relationship("Batches", backref="logs")
-    # style_id = Column(
-    #     Integer, ForeignKey("styles.id", ondelete="RESTRICT"), nullable=True
-    # )
-    # style = relationship("Styles", backref="logs")
 
     def __init__(self):
         Base.__init__(self)
@@ -329,17 +322,3 @@ class Logs(Base):
 @event.listens_for(Logs, "before_update")
 def autoupdate_logs(mapper, connection, log):
     log.url = log.get_url()
-
-
-# class Styles(Base):
-#     """
-#     Definición de tabla para estilos (styles).
-
-#     Atributos:
-#         __tablename__ (str): Nombre de la tabla en la base de datos.
-#         name (Column): Columna de tipo String que representa el nombre del estilo.
-#     """
-
-#     __tablename__ = "styles"
-
-#     name = Column(String, nullable=False, unique=True)
