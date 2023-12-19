@@ -61,7 +61,7 @@ def parse_ids(kwargs) -> dict:
     Parses ids into a list of ints.
     """
     if "ids" in kwargs:
-        kwargs["ids"] = [int(val) for val in re.find_all(r"\b\d+\b", kwargs["ids"])]
+        kwargs["ids"] = [int(val) for val in re.findall(r"\b\d+\b", kwargs["ids"])]
     return kwargs
 
 

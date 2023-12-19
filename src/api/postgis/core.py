@@ -113,7 +113,7 @@ def view_push_to_layer(
 
 @core_exception_logger
 def delete_geometries(
-    geometry_id: Union[int, List[int]],
+    ids: Union[int, List[int]],
     error_handle: str = "fail",
     log: Optional[int] = None,
     *args,
@@ -123,7 +123,7 @@ def delete_geometries(
     Elimina geometrías de PostGIS y registra la acción en el log.
 
     Args:
-    - geometry_id (Union[int, List[int]]): ID o lista de IDs de geometrías a eliminar.
+    - ids (Union[int, List[int]]): ID o lista de IDs de geometrías a eliminar.
     - error_handle (str): Manejo de errores ("fail" o "replace").
     - log (Optional[int]): Objeto de log opcional para registrar la acción.
 
@@ -133,14 +133,14 @@ def delete_geometries(
 
     """
     log = get_log(log) if isinstance(log, int) else log or Logs()
-    count = postgis.drop_geometries(geometry_id)
+    count = postgis.drop_geometries(ids)
     log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
 
 
 @core_exception_logger
 def delete_batches(
-    batch_id: Union[int, List[int]],
+    ids: Union[int, List[int]],
     cascade: bool = False,
     error_handle: str = "fail",
     log: Optional[int] = None,
@@ -151,7 +151,7 @@ def delete_batches(
     Elimina lotes de geometrías en PostGIS y registra la acción en el log.
 
     Args:
-    - batch_id (Union[int, List[int]]): ID o lista de IDs de lotes a eliminar.
+    - ids (Union[int, List[int]]): ID o lista de IDs de lotes a eliminar.
     - cascade (bool): Indica si se deben eliminar en cascada las dependencias.
     - error_handle (str): Manejo de errores ("fail" o "replace").
     - log (Optional[int]): Objeto de log opcional para registrar la acción.
@@ -162,6 +162,6 @@ def delete_batches(
 
     """
     log = get_log(log) if isinstance(log, int) else log or Logs()
-    count = postgis.drop_batches(batch_id, cascade=cascade)
+    count = postgis.drop_batches(ids, cascade=cascade)
     log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
