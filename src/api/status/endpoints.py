@@ -3,7 +3,7 @@ from flask_restx import Resource
 from utils.geoserver_interface import Geoserver
 
 from . import namespace
-from .core import get_log_record, standard_response, get_batch_record
+from .core import get_batch_record, get_log_record, standard_response
 
 geoserver = Geoserver()
 

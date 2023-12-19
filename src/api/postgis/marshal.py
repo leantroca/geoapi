@@ -1,9 +1,15 @@
 import json
+import re
 
 from flask_restx import reqparse
-from werkzeug.utils import secure_filename
 
-from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker, is_true
+from api.utils import (
+    base_arguments,
+    batch_arguments,
+    form_maker,
+    is_true,
+    kml_read_error_handle,
+)
 from utils.general import clean_nones
 
 
@@ -104,7 +110,7 @@ cascade = reqparse.Argument(
     type=str,
     required=False,
     default="false",
-    choices=["true", "false"]
+    choices=["true", "false"],
 )
 
 kml_to_geometries_parser = form_maker(

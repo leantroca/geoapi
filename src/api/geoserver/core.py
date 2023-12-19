@@ -1,20 +1,12 @@
-import os
 from typing import Optional, Union
 
-from geoalchemy2 import functions as func
-from geoalchemy2.elements import WKTElement
-from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
 
+from api.celery import postgis
 from api.logger import core_exception_logger, get_log
 from api.utils import generate_batch
-from models.tables import Batches, Geometries, Layers, Logs
-from utils.config import settings
+from models.tables import Layers, Logs
 from utils.geoserver_interface import Geoserver
-from utils.kml_interface import KML
-from utils.postgis_interface import PostGIS
-from api.celery import postgis
 
 geoserver = Geoserver()
 

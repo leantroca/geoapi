@@ -8,6 +8,6 @@ broker_url = settings.CELERY_BROKER
 broker_transport_options = {"visibility_timeout": 3600 * 6}
 
 imports = (
-	"api.geoserver.tasks",
-	"api.postgis.tasks",
+    "api.geoserver.tasks",
+    "api.postgis.tasks",
 )

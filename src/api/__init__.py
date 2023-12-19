@@ -2,9 +2,9 @@ from flask import Blueprint
 from flask_restx import Api
 
 from .geoserver.endpoints import namespace as geoserver_ns
+from .postgis.endpoints import namespace as postgis_ns
 from .status.endpoints import namespace as status_ns
 from .styles.endpoints import namespace as styles_ns
-from .postgis.endpoints import namespace as postgis_ns
 
 blueprint = Blueprint("api", __name__)
 api = Api(blueprint)

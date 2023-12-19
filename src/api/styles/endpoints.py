@@ -1,7 +1,7 @@
 from flask_restx import Resource
 from requests.exceptions import HTTPError
 
-from api.logger import keep_track, is_jsonable
+from api.logger import keep_track
 from utils.postgis_interface import PostGIS
 
 from . import namespace

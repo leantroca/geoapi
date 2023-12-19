@@ -1,12 +1,12 @@
 import re
-from typing import Literal, Optional, Union, List
+from typing import List, Literal, Optional, Union
 from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from models.tables import Layers, Logs, Batches, Geometries
+from models.tables import Batches, Geometries, Layers, Logs
 from utils.config import settings
 
 
@@ -49,7 +49,11 @@ class PostGIS:
         self._password = password or settings.__getattribute__("POSTGIS_PASS")
         self._database = database or settings.__getattribute__("POSTGIS_DATABASE")
         self._schema = schema or settings.__getattribute__("POSTGIS_SCHEMA")
-        self._driver = driver or settings.__getattribute__("POSTGIS_DRIVER") or "postgresql+psycopg2"
+        self._driver = (
+            driver
+            or settings.__getattribute__("POSTGIS_DRIVER")
+            or "postgresql+psycopg2"
+        )
         self._coordsys = (
             coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
         )
@@ -348,7 +352,11 @@ class PostGIS:
             ids = [ids]
         geometries_deleted = 0
         with self.engine.begin() as transaction:
-            geometries_remaining = self.session.query(Geometries).filter(Geometries.batch_id.in_(ids)).count()
+            geometries_remaining = (
+                self.session.query(Geometries)
+                .filter(Geometries.batch_id.in_(ids))
+                .count()
+            )
             if cascade:
                 geometries_deleted = geometries_remaining
                 # Run cascade efect
@@ -358,8 +366,7 @@ class PostGIS:
                         SET batch_id = NULL
                         WHERE batch_id IN ({ids}) ;
                     """.format(
-                        schema=self.schema,
-                        ids=", ".join(str(i) for i in ids)
+                        schema=self.schema, ids=", ".join(str(i) for i in ids)
                     )
                 )
                 transaction.execute(
@@ -367,21 +374,21 @@ class PostGIS:
                         DELETE FROM {schema}.geometries
                         WHERE batch_id IN ({ids}) ;
                     """.format(
-                        schema=self.schema,
-                        ids=", ".join(str(i) for i in ids)
+                        schema=self.schema, ids=", ".join(str(i) for i in ids)
                     )
                 )
             elif geometries_remaining > 0:
-                raise Exception(f"Batch deletion prevented! There are {geometries_remaining} geometries attached to"
-                " this batch. Set 'cascade' to true to proceed with Geometry deletion as well.")
+                raise Exception(
+                    f"Batch deletion prevented! There are {geometries_remaining} geometries attached to"
+                    " this batch. Set 'cascade' to true to proceed with Geometry deletion as well."
+                )
             # Delete batches
             transaction.execute(
                 """
                     DELETE FROM {schema}.geometries
                     WHERE batch_id IN ({ids}) ;
                 """.format(
-                    schema=self.schema,
-                    ids=", ".join(str(i) for i in ids)
+                    schema=self.schema, ids=", ".join(str(i) for i in ids)
                 )
             )
             # self.session.commit()
@@ -397,15 +404,16 @@ class PostGIS:
         """
         if isinstance(ids, int):
             ids = [ids]
-        geometries_deleted = self.session.query(Geometries).filter(Geometries.id.in_(ids)).count()
+        geometries_deleted = (
+            self.session.query(Geometries).filter(Geometries.id.in_(ids)).count()
+        )
         with self.engine.begin() as transaction:
             transaction.execute(
                 """
                     DELETE FROM {schema}.geometries
                     WHERE id IN ({ids}) ;
                 """.format(
-                    schema=self.schema,
-                    ids=", ".join(str(i) for i in ids)
+                    schema=self.schema, ids=", ".join(str(i) for i in ids)
                 )
             )
             # self.session.commit()
@@ -462,18 +470,6 @@ class PostGIS:
             "maxy": float(blist[3].strip()),
         }
 
-    def get_layer(self, name: str) -> Layers:
-        """
-        Obtiene una capa de la base de datos.
-
-        Args:
-            name (str): Nombre de la capa.
-
-        Returns:
-            Layers: Objeto de capa correspondiente al nombre proporcionado.
-        """
-        return self.session.query(Layers).filter_by(name=name).first()
-
     def get_log(self, id: Union[int, Logs]) -> Logs:
         return self.session.query(Logs).get(id) if isinstance(id, int) else id
 
@@ -504,9 +500,19 @@ class PostGIS:
         """
         return getattr(self.get_batch(id=id), "record", None)
 
-    def get_layer(self, id: Optional[int]=None, name:Optional[str]=None):
+    def get_layer(
+        self, id: Optional[int] = None, name: Optional[str] = None
+    ) -> Optional[Layers]:
         """
-        Devuelve el objeto de un capa existente.
+        Devuelve el objeto de una capa existente.
+
+        Args:
+            id (int, opcional): ID de la capa a buscar.
+            name (str, opcional): Nombre de la capa a buscar.
+
+        Returns:
+            Layers o None: Objeto de la capa si se encuentra,
+                o None si no se encuentra ninguna coincidencia.
         """
         if id:
             return self.session.query(Layers).get(id) if isinstance(id, int) else id
@@ -515,8 +521,17 @@ class PostGIS:
         else:
             return None
 
-    def get_or_create_layer(self, id: Optional[int]=None, name:Optional[str]=None):
+    def get_or_create_layer(
+        self, id: Optional[int] = None, name: Optional[str] = None
+    ) -> Layers:
         """
         Devuelve el objeto de una capa existente o la crea en caso de no existir.
+
+        Args:
+            id (int, opcional): ID de la capa a buscar o crear.
+            name (str, opcional): Nombre de la capa a buscar o crear.
+
+        Returns:
+            Layers: Objeto de la capa existente o recién creada.
         """
         return self.get_layer(id=id, name=name) or Layers(name=name)

@@ -1,5 +1,6 @@
 from models.tables import Logs
 from utils.postgis_interface import PostGIS
+
 # from api import postgis
 
 postgis = PostGIS()

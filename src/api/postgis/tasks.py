@@ -1,13 +1,12 @@
 from api.celery import app
-from api.logger import keep_track, get_log, get_log_response
-
+from api.logger import get_log, keep_track
 from api.utils import temp_remove
 
 from .core import (
+    delete_batches,
+    delete_geometries,
     kml_to_create_batch,
     view_push_to_layer,
-    delete_geometries,
-    delete_batches,
 )
 
 

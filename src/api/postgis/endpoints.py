@@ -1,36 +1,28 @@
 from flask_restx import Resource
 
-from api.logger import debug_metadata, keep_track, get_log_response, is_jsonable
-from api.utils import temp_store, temp_remove
+from api.logger import debug_metadata, get_log_response, keep_track
+from api.utils import temp_remove, temp_store
 
 from . import namespace
-# from .core import (
-#     get_log_response,
-#     temp_remove,
-#     temp_store,
-#     verify_layer_exists,
-#     verify_layer_not_exists,
-# )
 from .marshal import (
-    parse_kwargs,
-    parse_ids,
+    delete_batch_parser,
+    delete_geometry_parser,
     kml_to_geometries_parser,
+    parse_ids,
+    parse_kwargs,
     url_to_geometries_parser,
     view_to_push_parser,
-    delete_geometry_parser,
-    delete_batch_parser,
 )
 from .tasks import (
+    task_delete_batches,
+    task_delete_geometries,
     task_kml_to_create_batch,
     task_view_push_to_layer,
-    task_delete_geometries,
-    task_delete_batches,
 )
 
 
 class EndpointServer(Resource):
     def logger(self, *args, **kwargs):
-
         return keep_track(
             endpoint=self.endpoint.replace("_", "/").lower(),
             layer=None,
@@ -92,7 +84,6 @@ class KMLFormIngest(EndpointServer):
             )
             temp_remove(kwargs["file"])
         return get_log_response(log_id)
-
 
 
 @namespace.route("/url/form/ingest")
@@ -186,7 +177,6 @@ class ViewFormPush(EndpointServer):
                 json=debug_metadata(**kwargs),
             )
         return get_log_response(log_id)
-
 
 
 @namespace.route("/delete/geometry")

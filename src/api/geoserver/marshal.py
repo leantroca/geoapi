@@ -3,7 +3,13 @@ import json
 from flask_restx import reqparse
 from werkzeug.utils import secure_filename
 
-from api.utils import base_arguments, batch_arguments, kml_read_error_handle, form_maker, is_true
+from api.utils import (
+    base_arguments,
+    batch_arguments,
+    form_maker,
+    is_true,
+    kml_read_error_handle,
+)
 from utils.general import clean_nones
 
 
@@ -51,7 +57,6 @@ def parse_kwargs(parser):
     return clean_nones(kwargs)
 
 
-
 # kml_error_handle = reqparse.Argument(
 #     "error_handle",
 #     dest="error_handle",
@@ -79,7 +84,7 @@ delete_geometries = reqparse.Argument(
     type=str,
     required=False,
     default="false",
-    choices=["true", "false"]
+    choices=["true", "false"],
 )
 
 

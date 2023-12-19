@@ -1,14 +1,10 @@
-import os
 import json
+import os
 from typing import Union
 
+from api.celery import postgis
 from models.tables import Logs
 from utils.general import clean_nones
-from utils.postgis_interface import PostGIS
-
-from api.celery import postgis
-
-# postgis = PostGIS()
 
 
 def core_exception_logger(target):
@@ -22,6 +18,7 @@ def core_exception_logger(target):
     - wrapper: Función envoltorio.
 
     """
+
     def wrapper(*args, **kwargs):
         log_id = kwargs.get("log") or keep_track()
         log_id = log_id.id if isinstance(log_id, Logs) else log_id

@@ -1,20 +1,12 @@
-import os
-import re
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-from geoalchemy2 import functions as func
-from geoalchemy2.elements import WKTElement
-from geoalchemy2.shape import from_shape
 from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
 
+from api.celery import postgis
 from api.logger import core_exception_logger, get_log
 from api.utils import generate_batch
-from api.celery import postgis
-from models.tables import Batches, Geometries, Layers, Logs
-from utils.config import settings
+from models.tables import Logs
 from utils.geoserver_interface import Geoserver
-from utils.kml_interface import KML
 
 geoserver = Geoserver()
 
@@ -167,10 +159,9 @@ def delete_batches(
     Keyword Args:
     - args: Argumentos posicionales adicionales.
     - kwargs: Otros argumentos opcionales.
-    
+
     """
     log = get_log(log) if isinstance(log, int) else log or Logs()
     count = postgis.drop_batches(batch_id, cascade=cascade)
     log.message = f"Postgis deleted {count} geometries."
     postgis.session.commit()
-

@@ -1,14 +1,14 @@
 import os
+from typing import Optional, Union
 
-from typing import Union, Optional
 from flask_restx import reqparse
-from werkzeug.datastructures import FileStorage
-from werkzeug.utils import secure_filename
 from geoalchemy2 import functions as func
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import from_shape
+from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 
-from models.tables import Batches, Geometries, Layers, Logs
+from models.tables import Batches, Geometries, Logs
 from utils.config import settings
 from utils.geoserver_interface import Geoserver
 from utils.kml_interface import KML
@@ -39,6 +39,7 @@ parser.add_argument('picture', type=werkzeug.datastructures.FileStorage,
 # https://flask-restx.readthedocs.io/en/latest/api.html#module-flask_restx.reqparse
 """
 
+
 def form_maker(*args):
     """
     Crea un objeto RequestParser con los argumentos proporcionados.
@@ -57,7 +58,7 @@ def form_maker(*args):
 
 
 def is_true(value):
-  return value.lower() == 'true'
+    return value.lower() == "true"
 
 
 base_arguments = {
