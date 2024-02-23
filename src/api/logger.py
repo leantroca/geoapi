@@ -9,6 +9,41 @@ from utils.general import clean_nones
 
 postgis = PostGIS()
 
+class Logger(PostGIS):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.keep_track(*args, **kwargs)
+
+
+    @property
+    def log(self):
+        if not self._log:
+            self._log = Logs()
+            self.session.add(self._log)
+            self.session.flush()
+        return self._log
+    
+
+    def keep_track(self, *args, **kwargs) -> Logs:
+        """
+        Registra y actualiza información de seguimiento en la base de datos.
+
+        Args:
+            log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
+                se creará uno nuevo. Default es None.
+            **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
+
+        Returns:
+            Logs: El registro actualizado en la base de datos.
+
+        """
+        self.log.update(**kwargs)
+        self.session.flush()
+        return log
+
+
+
 def core_exception_logger(target):
     """
     Decorador para manejar excepciones y registrar información en un log.

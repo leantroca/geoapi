@@ -18,7 +18,9 @@ from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_crea
 
 
 class EndpointServer(Resource):
+    print("class EndpointServer(Resource):")
     def logger(self, *args, **kwargs):
+        print("def logger(self, *args, **kwargs):")
         return keep_track(
             endpoint=self.endpoint.replace("_", "/").lower(),
             layer=kwargs["layer"],

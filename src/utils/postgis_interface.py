@@ -18,13 +18,14 @@ class PostGIS:
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        driver: Optional[str] = None,
-        coordsys: Optional[str] = None,
+        host: Optional[str] = settings.__getattribute__("POSTGIS_HOSTNAME"),
+        port: Optional[int] = settings.__getattribute__("POSTGIS_PORT"),
+        username: str = settings.__getattribute__("POSTGIS_USER"),
+        password: str = settings.__getattribute__("POSTGIS_PASS"),
+        database: str = settings.__getattribute__("POSTGIS_DATABASE"),
+        schema: str = settings.__getattribute__("POSTGIS_SCHEMA"),
+        driver: str = settings.__getattribute__("POSTGIS_DRIVER") or "postgresql+psycopg2",
+        coordsys: str = settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326",
         *args,
         **kwargs,
     ):
@@ -43,21 +44,13 @@ class PostGIS:
             **kwargs: Argumentos clave adicionales.
 
         """
-        self._host = host or settings.__getattribute__("POSTGIS_HOSTNAME") + ":" + str(
-            settings.__getattribute__("POSTGIS_PORT")
-        )
-        self._username = username or settings.__getattribute__("POSTGIS_USER")
-        self._password = password or settings.__getattribute__("POSTGIS_PASS")
-        self._database = database or settings.__getattribute__("POSTGIS_DATABASE")
-        self._schema = schema or settings.__getattribute__("POSTGIS_SCHEMA")
-        self._driver = (
-            driver
-            or settings.__getattribute__("POSTGIS_DRIVER")
-            or "postgresql+psycopg2"
-        )
-        self._coordsys = (
-            coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
-        )
+        self._host = host + (f":{port}" if port else "")
+        self._username = username
+        self._password = password
+        self._database = database
+        self._schema = schema
+        self._driver = driver
+        self._coordsys = coordsys
         self._engine = None
         self._session = None
 
