@@ -2,7 +2,7 @@ from typing import Optional, Union
 
 from werkzeug.datastructures import FileStorage
 
-from api.celery import postgis
+from utils.postgis_interface import PostGIS
 from api.logger import core_exception_logger, get_log
 from api.utils import generate_batch
 from models.tables import Layers, Logs
@@ -14,15 +14,17 @@ geoserver = Geoserver()
 def verify_layer_exists(layer: str):
     if layer not in geoserver.list_layers():
         raise ValueError(f"Layer {layer} doesn't exist on Geoserver.")
-    if layer not in postgis.list_layers():
-        raise ValueError(f"Layer {layer} doesn't exist on Postgis.")
+    with PostGIS() as postgis:
+        if layer not in postgis.list_layers():
+            raise ValueError(f"Layer {layer} doesn't exist on Postgis.")
 
 
 def verify_layer_not_exists(layer: str):
     if layer in geoserver.list_layers():
         raise ValueError(f"Layer '{layer}' already exists on Geoserver.")
-    if layer in postgis.list_layers():
-        raise ValueError(f"Layer '{layer}' already exists on Postgis.")
+    with PostGIS() as postgis:
+        if layer in postgis.list_layers():
+            raise ValueError(f"Layer '{layer}' already exists on Postgis.")
 
 
 @core_exception_logger
@@ -72,45 +74,46 @@ def kml_to_create_layer(
         None
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    verify_layer_not_exists(layer=layer)
-    new_layer = Layers(
-        name=layer,
-    )
-    postgis.session.add(new_layer)
-    new_batch = generate_batch(
-        file=file,
-        obra=obra,
-        operatoria=operatoria,
-        provincia=provincia,
-        departamento=departamento,
-        municipio=municipio,
-        localidad=localidad,
-        estado=estado,
-        descripcion=descripcion,
-        cantidad=cantidad,
-        categoria=categoria,
-        ente=ente,
-        fuente=fuente,
-        json=json,
-        error_handle=error_handle,
-    )
-    new_layer.batches.append(new_batch)
-    postgis.session.add(new_batch)
-    log.batch = new_batch
-    log.message = "PostGIS KML ingested."
-    postgis.session.commit()
-    # Create View
-    postgis.create_view(layer)
-    log.message_append("PostGIS view created.")
-    postgis.session.commit()
-    # Import layer
-    geoserver.push_layer(
-        layer=layer,
-        **postgis.bbox(layer),
-    )
-    log.message_append("Geoserver layer created.")
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        log = get_log(log) if isinstance(log, int) else log or Logs()
+        verify_layer_not_exists(layer=layer)
+        new_layer = Layers(
+            name=layer,
+        )
+        postgis.session.add(new_layer)
+        new_batch = generate_batch(
+            file=file,
+            obra=obra,
+            operatoria=operatoria,
+            provincia=provincia,
+            departamento=departamento,
+            municipio=municipio,
+            localidad=localidad,
+            estado=estado,
+            descripcion=descripcion,
+            cantidad=cantidad,
+            categoria=categoria,
+            ente=ente,
+            fuente=fuente,
+            json=json,
+            error_handle=error_handle,
+        )
+        new_layer.batches.append(new_batch)
+        postgis.session.add(new_batch)
+        log.batch_id = new_batch.id
+        log.message = "PostGIS KML ingested."
+        postgis.session.commit()
+        # Create View
+        postgis.create_view(layer)
+        log.message_append("PostGIS view created.")
+        postgis.session.commit()
+        # Import layer
+        geoserver.push_layer(
+            layer=layer,
+            **postgis.bbox(layer),
+        )
+        log.message_append("Geoserver layer created.")
+        postgis.session.commit()
 
 
 @core_exception_logger
@@ -160,40 +163,41 @@ def kml_to_append_layer(
         None
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    verify_layer_exists(layer=layer)
-    append_layer = postgis.get_layer(name=layer)
-    new_batch = generate_batch(
-        file=file,
-        obra=obra,
-        operatoria=operatoria,
-        provincia=provincia,
-        departamento=departamento,
-        municipio=municipio,
-        localidad=localidad,
-        estado=estado,
-        descripcion=descripcion,
-        cantidad=cantidad,
-        categoria=categoria,
-        ente=ente,
-        fuente=fuente,
-        json=json,
-        error_handle=error_handle,
-    )
-    append_layer.batches.append(new_batch)
-    postgis.session.add(new_batch)
-    log.batch = new_batch
-    log.message = "PostGIS KML ingested."
-    postgis.session.commit()
-    geoserver.delete_layer(
-        layer=layer,
-    )
-    geoserver.push_layer(
-        layer=layer,
-        **postgis.bbox(layer),
-    )
-    log.message_append("Geoserver layer updated.")
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        log = get_log(log) if isinstance(log, int) else log or Logs()
+        verify_layer_exists(layer=layer)
+        append_layer = postgis.get_layer(name=layer)
+        new_batch = generate_batch(
+            file=file,
+            obra=obra,
+            operatoria=operatoria,
+            provincia=provincia,
+            departamento=departamento,
+            municipio=municipio,
+            localidad=localidad,
+            estado=estado,
+            descripcion=descripcion,
+            cantidad=cantidad,
+            categoria=categoria,
+            ente=ente,
+            fuente=fuente,
+            json=json,
+            error_handle=error_handle,
+        )
+        append_layer.batches.append(new_batch)
+        postgis.session.add(new_batch)
+        log.batch_id = new_batch.id
+        log.message = "PostGIS KML ingested."
+        postgis.session.commit()
+        geoserver.delete_layer(
+            layer=layer,
+        )
+        geoserver.push_layer(
+            layer=layer,
+            **postgis.bbox(layer),
+        )
+        log.message_append("Geoserver layer updated.")
+        postgis.session.commit()
 
 
 @core_exception_logger
@@ -220,17 +224,18 @@ def delete_layer(
         None
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
-    log.message = "Geoserver layer deleted."
-    postgis.session.commit()
-    postgis.drop_view(layer=layer, if_not_exists=error_handle, cascade=True)
-    log.message_append("View deleted.")
-    postgis.session.commit()
-    postgis.drop_layer(
-        layer=layer, if_not_exists=error_handle, cascade=delete_geometries
-    )
-    log.message_append(
-        f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
-    )
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        log = get_log(log) if isinstance(log, int) else log or Logs()
+        geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
+        log.message = "Geoserver layer deleted."
+        postgis.session.commit()
+        postgis.drop_view(layer=layer, if_not_exists=error_handle, cascade=True)
+        log.message_append("View deleted.")
+        postgis.session.commit()
+        postgis.drop_layer(
+            layer=layer, if_not_exists=error_handle, cascade=delete_geometries
+        )
+        log.message_append(
+            f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
+        )
+        postgis.session.commit()

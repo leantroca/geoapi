@@ -1,10 +1,6 @@
 from models.tables import Logs
 from utils.postgis_interface import PostGIS
 
-# from api import postgis
-
-postgis = PostGIS()
-
 
 def get_log_record(id: int):
     """
@@ -19,7 +15,8 @@ def get_log_record(id: int):
     Raises:
         Exception: Error al obtener el registro de estado.
     """
-    return postgis.get_log_record(id=id)
+    with PostGIS() as postgis:
+        return postgis.get_log_record(id=id)
 
 
 def standard_response(**kwargs):
@@ -41,4 +38,5 @@ def get_batch_record(id: int):
     Raises:
         Exception: Error al obtener el registro de estado.
     """
-    return postgis.get_batch_record(id=id)
+    with PostGIS() as postgis:
+        return postgis.get_batch_record(id=id)

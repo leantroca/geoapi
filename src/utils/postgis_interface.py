@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 import pandas
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.exc import DatabaseError
 
 from models.tables import Batches, Geometries, Layers, Logs
 from utils.config import settings
@@ -59,6 +60,22 @@ class PostGIS:
         )
         self._engine = None
         self._session = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+          if not exc_type:
+            self.session.commit()
+          else:
+            if isinstance(exc_value, DatabaseError):
+              print("Error occurred, rolling back changes...")
+              self.session.rollback()
+            else:
+              raise
+        finally:
+          self.session.close()
 
     @property
     def host(self) -> Optional[str]:

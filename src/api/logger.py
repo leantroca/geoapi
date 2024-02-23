@@ -2,10 +2,12 @@ import json
 import os
 from typing import Union
 
-from api.celery import postgis
+from utils.postgis_interface import PostGIS
 from models.tables import Logs
 from utils.general import clean_nones
 
+
+postgis = PostGIS()
 
 def core_exception_logger(target):
     """
