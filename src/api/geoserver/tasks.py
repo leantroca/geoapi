@@ -1,5 +1,5 @@
 from api.celery import app
-from api.logger import get_log, keep_track
+from api.logger import get_log, keep_track, Logger
 from api.utils import temp_remove
 
 from .core import kml_to_append_layer  # get_log,; temp_remove,
@@ -24,11 +24,12 @@ def task_kml_to_create_layer(*args, **kwargs):
     Returns:
         None
     """
-    keep_track(log=kwargs["log"], message="Processing.", status=205)
-    kml_to_create_layer(*args, **kwargs)
-    temp_remove(kwargs["file"])
-    if get_log(kwargs["log"]).status == 205:
-        keep_track(log=kwargs["log"], append_message="Success!", status=210)
+    with Logger(log_id=kwargs["log_id"]) as logger:
+        logger.keep_track(message="Processing.", status=205)
+        kml_to_create_layer(*args, **kwargs, log=logger.log)
+        temp_remove(kwargs["file"])
+        if logger.log.status == 205:
+            logger.log.keep_track(append_message="Success!", status=210)
 
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)

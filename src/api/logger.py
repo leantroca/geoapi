@@ -13,6 +13,7 @@ class Logger(PostGIS):
 
     def __init__(self, *args, **kwargs):
         super().__init__()
+        self._log = self.get_log(id=kwargs["log_id"]) if isinstance(kwargs.get("log_id"), int) else None
         self.keep_track(*args, **kwargs)
 
 
@@ -40,7 +41,7 @@ class Logger(PostGIS):
         """
         self.log.update(**kwargs)
         self.session.flush()
-        return log
+        return self.log
 
 
 

@@ -75,7 +75,7 @@ def kml_to_create_layer(
 
     """
     with PostGIS() as postgis:
-        log = get_log(log) if isinstance(log, int) else log or Logs()
+        log = get_log(log) if isinstance(log, int) else log # or Logs()
         verify_layer_not_exists(layer=layer)
         new_layer = Layers(
             name=layer,
