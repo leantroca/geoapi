@@ -5,7 +5,7 @@ from typing import Union, Optional, Tuple
 from utils.postgis_interface import PostGIS
 from models.tables import Logs
 from utils.general import clean_nones
-from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.exceptions import BadRequest, Conflict, BadGateway, InternalServerError
 
 
 postgis = PostGIS()
@@ -84,30 +84,30 @@ def core_exception_logger(target):
     def wrapper(*args, **kwargs):
         logger = kwargs.get("logger")
         try:
-            # TODO: kml_to_create_layer() got multiple values for argument 'file'. [Lea]
+            # TODO: Si agrego *args: kml_to_create_layer() got multiple values for argument 'file'. [Lea]
             result = target(**kwargs)
             return result
         except Exception as error:
             if isinstance(
-                error, BadRequest
-            ):
+                error, Conflict
+            ): # Bad Request
                 if logger:
                     logger.keep_track(
-                        status = 400,
+                        status = 409,
                         message_append = str(error),
                         json = debug_metadata(**kwargs),
                     )
             elif isinstance(
-                error, InternalServerError
-            ):
+                error, BadGateway
+            ): # Bad Gateway from the DB.
                 if logger:
                     logger.keep_track(
-                        status = 500,
+                        status = 502,
                         message_append = str(error),
                         json = debug_metadata(**kwargs),
                     )
                 raise error
-            else:  # serverErrorException
+            else:  # Not Yet Implemented.
                 if logger:
                     logger.keep_track(
                         status = 501,
@@ -136,7 +136,7 @@ def debug_metadata(**kwargs) -> dict:
             if key not in ["file"]
             else str([os.path.basename(element) for element in value])
             for key, value in kwargs.items()
-            if key not in ["log"]
+            if key not in ["logger"]
         }
     )
 

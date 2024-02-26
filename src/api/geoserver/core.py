@@ -14,18 +14,18 @@ geoserver = Geoserver()
 
 def verify_layer_exists(layer: str):
     if layer not in geoserver.list_layers():
-        raise BadRequest(f"Layer {layer} doesn't exist on Geoserver.")
+        raise Conflict(f"Layer {layer} doesn't exist on Geoserver.")
     with PostGIS() as postgis:
         if layer not in postgis.list_layers():
-            raise BadRequest(f"Layer {layer} doesn't exist on Postgis.")
+            raise Conflict(f"Layer {layer} doesn't exist on Postgis.")
 
 
 def verify_layer_not_exists(layer: str):
     if layer in geoserver.list_layers():
-        raise BadRequest(f"Layer '{layer}' already exists on Geoserver.")
+        raise Conflict(f"Layer '{layer}' already exists on Geoserver.")
     with PostGIS() as postgis:
         if layer in postgis.list_layers():
-            raise BadRequest(f"Layer '{layer}' already exists on Postgis.")
+            raise Conflict(f"Layer '{layer}' already exists on Postgis.")
 
 
 @core_exception_logger
@@ -103,18 +103,22 @@ def kml_to_create_layer(
         postgis.session.add(new_layer)
         # Genera View.
         postgis.create_view(layer)
-        if logger:
-            logger.keep_track(
-                batch_id=new_batch.id,
-                message_append="PostGIS KML ingested. PostGIS view created.",
-            )
-        # Pushea nueva capa en Geoserver.
-        geoserver.push_layer(
-            layer=layer,
-            **postgis.bbox(layer),
+        # Consulta bbox de la layer.
+        bbox = postgis.bbox(layer)
+        batch_id = new_batch.id
+    # Fin de operaciones en DB.
+    if logger:
+        logger.keep_track(
+            batch_id=batch_id,
+            message_append="PostGIS KML ingested. PostGIS view created.",
         )
-        if logger:
-            logger.message_append("Geoserver layer created.")
+    # Pushea nueva capa en Geoserver.
+    geoserver.push_layer(
+        layer=layer,
+        **bbox,
+    )
+    if logger:
+        logger.message_append("Geoserver layer created.")
 
 
 @core_exception_logger
@@ -135,7 +139,8 @@ def kml_to_append_layer(
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "skip",
-    log: Logs = None,
+    logger = None,
+    **kwargs,
 ) -> None:
     """
     Agrega datos de un archivo KML a una capa existente en GeoServer y los ingresa en la base de datos de PostGIS.
@@ -165,9 +170,9 @@ def kml_to_append_layer(
 
     """
     with PostGIS() as postgis:
-        log = get_log(log) if isinstance(log, int) else log or Logs()
-        verify_layer_exists(layer=layer)
+        # Obtiene layer existente.
         append_layer = postgis.get_layer(name=layer)
+        # Genera batch.
         new_batch = generate_batch(
             file=file,
             obra=obra,
@@ -186,19 +191,25 @@ def kml_to_append_layer(
             error_handle=error_handle,
         )
         append_layer.batches.append(new_batch)
-        postgis.session.add(new_batch)
-        log.batch_id = new_batch.id
-        log.message = "PostGIS KML ingested."
-        postgis.session.commit()
-        geoserver.delete_layer(
-            layer=layer,
+        postgis.session.add(append_layer)
+        # Consulta bbox de la layer.
+        bbox = postgis.bbox(layer)
+        batch_id = new_batch.id
+    # Fin de operaciones en DB.
+    if logger:
+        logger.keep_track(
+            batch_id=batch_id,
+            message_append="PostGIS KML ingested. PostGIS view updated.",
         )
-        geoserver.push_layer(
-            layer=layer,
-            **postgis.bbox(layer),
-        )
-        log.message_append("Geoserver layer updated.")
-        postgis.session.commit()
+    geoserver.delete_layer(
+        layer=layer,
+    )
+    geoserver.push_layer(
+        layer=layer,
+        **bbox,
+    )
+    if logger:
+        logger.message_append("Geoserver layer updated.")
 
 
 @core_exception_logger
@@ -207,7 +218,8 @@ def delete_layer(
     delete_geometries: Optional[bool] = False,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "ignore",
-    log: Optional[Logs] = None,
+    logger = None,
+    **kwargs,
 ) -> None:
     """
     Elimina una capa y sus datos asociados de GeoServer y PostGIS.
@@ -226,17 +238,19 @@ def delete_layer(
 
     """
     with PostGIS() as postgis:
-        log = get_log(log) if isinstance(log, int) else log or Logs()
-        geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
-        log.message = "Geoserver layer deleted."
-        postgis.session.commit()
+        # Primero elimina la view que depende de la layer.
         postgis.drop_view(layer=layer, if_not_exists=error_handle, cascade=True)
-        log.message_append("View deleted.")
-        postgis.session.commit()
+        # Elimina layer de la DB.
         postgis.drop_layer(
             layer=layer, if_not_exists=error_handle, cascade=delete_geometries
         )
-        log.message_append(
-            f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted."
+    # Fin de operaciones en DB.
+    if logger:
+        logger.keep_track(
+            message_append="View deleted." + "Geometries deleted." if delete_geometries else "",
         )
-        postgis.session.commit()
+    geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
+    if logger:
+        logger.keep_track(
+            message_append="Geoserver layer deleted. " + f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted.",
+        )
