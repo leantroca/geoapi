@@ -1,10 +1,11 @@
 import json
 import os
-from typing import Union
+from typing import Union, Optional, Tuple
 
 from utils.postgis_interface import PostGIS
 from models.tables import Logs
 from utils.general import clean_nones
+from werkzeug.exceptions import BadRequest, InternalServerError
 
 
 postgis = PostGIS()
@@ -22,11 +23,11 @@ class Logger(PostGIS):
         if not self._log:
             self._log = Logs()
             self.session.add(self._log)
-            self.session.flush()
+            self.session.commit()
         return self._log
     
 
-    def keep_track(self, *args, **kwargs) -> Logs:
+    def keep_track(self, *args, **kwargs):
         """
         Registra y actualiza información de seguimiento en la base de datos.
 
@@ -40,8 +41,31 @@ class Logger(PostGIS):
 
         """
         self.log.update(**kwargs)
-        self.session.flush()
-        return self.log
+        if "message_append" in kwargs:
+            self.message_append(append=kwargs["message_append"])
+        self.session.commit()
+
+
+    def message_append(self, append:str):
+        """TBD"""
+        self.log.message = (
+            ". ".join([self.log.message.strip("."), append.strip(".")]) + "."
+        ) if self.log.message else append.strip(".") + "."
+        self.session.commit()
+
+
+    def log_response(self) -> Tuple[dict, int]:
+        """
+        Obtiene una respuesta de log unificada.
+
+        Args:
+        - id (Union[int, Logs]): ID del log o un objeto Log.
+
+        Returns:
+        - tuple: Una tupla que contiene el registro del log y su estado.
+
+        """
+        return self.log.record, self.log.status
 
 
 
@@ -58,29 +82,38 @@ def core_exception_logger(target):
     """
 
     def wrapper(*args, **kwargs):
-        log_id = kwargs.get("log") or keep_track()
-        log_id = log_id.id if isinstance(log_id, Logs) else log_id
-        # if isinstance(log_id, int):
-        #     log = postgis.get_log(id=log)
-        kwargs["log"] = log_id
+        logger = kwargs.get("logger")
         try:
+            # TODO: kml_to_create_layer() got multiple values for argument 'file'. [Lea]
             result = target(**kwargs)
-            postgis.session.commit()
             return result
         except Exception as error:
-            log = postgis.get_log(id=log_id)
             if isinstance(
-                error, ValueError
-            ):  # reemplazar los: ValueError por: badRequestException
-                log.status = 400
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
+                error, BadRequest
+            ):
+                if logger:
+                    logger.keep_track(
+                        status = 400,
+                        message_append = str(error),
+                        json = debug_metadata(**kwargs),
+                    )
+            elif isinstance(
+                error, InternalServerError
+            ):
+                if logger:
+                    logger.keep_track(
+                        status = 500,
+                        message_append = str(error),
+                        json = debug_metadata(**kwargs),
+                    )
+                raise error
             else:  # serverErrorException
-                log.status = 500
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
+                if logger:
+                    logger.keep_track(
+                        status = 501,
+                        message_append = str(error),
+                        json = debug_metadata(**kwargs),
+                    )
                 raise error
 
     return wrapper

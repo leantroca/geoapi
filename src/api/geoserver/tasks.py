@@ -26,10 +26,9 @@ def task_kml_to_create_layer(*args, **kwargs):
     """
     with Logger(log_id=kwargs["log_id"]) as logger:
         logger.keep_track(message="Processing.", status=205)
-        kml_to_create_layer(*args, **kwargs, log=logger.log)
-        temp_remove(kwargs["file"])
+        kml_to_create_layer(*args, **kwargs, logger=logger)
         if logger.log.status == 205:
-            logger.log.keep_track(append_message="Success!", status=210)
+            logger.keep_track(message_append="Success!", status=210)
 
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)

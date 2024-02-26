@@ -278,6 +278,7 @@ class PostGIS:
                 WHERE la.name = '{layer}')
             """
         )
+        self.session.commit()
 
     def drop_view(
         self,

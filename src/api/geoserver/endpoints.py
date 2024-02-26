@@ -18,16 +18,6 @@ from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_crea
 
 
 class EndpointServer(Resource):
-    # print("class EndpointServer(Resource):")
-    # def logger(self, *args, **kwargs):
-    #     print("def logger(self, *args, **kwargs):")
-    #     return keep_track(
-    #         endpoint=self.endpoint.replace("_", "/").lower(),
-    #         layer=kwargs["layer"],
-    #         status=200,
-    #         message="Received.",
-    #         json={key: value for key, value in kwargs.items() if key != "file"},
-    #     )
 
     def job_received(self, *args, **kwargs):
         return {
@@ -79,20 +69,22 @@ class KMLFormCreate(EndpointServer):
         """
         kwargs = parse_kwargs(upload_kml_parser)
         with Logger(**self.job_received(**kwargs)) as logger:
-        # log = self.logger(**kwargs)
             try:
+                # TODO: Verificar archivo antes de continuar. [Lea]
                 kwargs["file"] = temp_store(kwargs["file"])
                 verify_layer_not_exists(kwargs["layer"])
-                # log_id = log if isinstance(log, int) else log.id
+                # task.delay requiere argumentos que sean JSON serializable.
                 task_kml_to_create_layer.delay(**kwargs, log_id=logger.log.id)
             except ValueError as error:
+                # Algo falló con los parámetros.
+                # TODO: Unificar con verificación de archivo. [Leo]
                 logger.keep_track(
                     status=400,
                     message=str(error),
                     json=debug_metadata(**kwargs),
                 )
                 temp_remove(kwargs["file"])
-            return get_log_response(logger.log)
+            return logger.log_response()
 
 
 @namespace.route("/kml/form/append")
