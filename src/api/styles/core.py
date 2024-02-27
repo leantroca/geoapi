@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal, Union, Optional
 
 from requests.exceptions import HTTPError
 from werkzeug.datastructures import FileStorage
 
-from api.logger import core_exception_logger, get_log
+from api.logger import core_exception_logger, Logger
 from models.tables import Logs
 from utils.geoserver_interface import Geoserver
 from utils.sld_interface import SLD
@@ -28,7 +28,7 @@ def push_sld_to_style(
     file: Union[str, FileStorage],
     style: str,
     error_handle: Literal["fail", "replace", "ignore"] = "fail",
-    log: Union[int, Logs] = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ):
     """
@@ -52,7 +52,6 @@ def push_sld_to_style(
     Returns:
         None
     """
-    log = get_log(id=log) if isinstance(log, int) else log
     sld = SLD(file)
     try:
         geoserver.push_style(
@@ -62,17 +61,18 @@ def push_sld_to_style(
         )
     except HTTPError:
         if error_handle == "ignore":
-            log.message = f"{style} style already exists."
+            return
         elif error_handle == "fail":
-            raise ValueError(f"{style} style already exists.")
-    log.message = f"{style} style created."
+            raise
+    if logger:
+        logger.keep_track(message_append=f"{style} style created.")
 
 
 @core_exception_logger
 def assign_style_to_layer(
     style: str,
     layer: str,
-    log: Union[int, Logs] = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ):
     """
@@ -91,19 +91,25 @@ def assign_style_to_layer(
     Returns:
         None
     """
-    log = get_log(id=log) if isinstance(log, int) else log
-    geoserver.assign_style(
-        style=style,
-        layer=layer,
-    )
-    log.message = f"{style} style assigned to {layer}."
+    try:
+        geoserver.assign_style(
+            style=style,
+            layer=layer,
+        )
+    except HTTPError:
+        if error_handle == "ignore":
+            return
+        elif error_handle == "fail":
+            raise
+    if logger:
+        logger.keep_track(message_append=f"{style} style assigned to {layer}.")
 
 
 @core_exception_logger
 def delete_style_from_server(
     style: str,
     error_handle: Literal["fail", "cascade"] = "fail",
-    log: Union[int, Logs] = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ):
     """
@@ -124,11 +130,17 @@ def delete_style_from_server(
     Returns:
         None
     """
-    log = get_log(id=log) if isinstance(log, int) else log
-    geoserver.delete_style(
-        style=style,
-        purge=True,
-        recurse=(error_handle == "cascade"),
-        if_not_exists="ignore",
-    )
-    log.message = f"{style} style deleted."
+    try:
+        geoserver.delete_style(
+            style=style,
+            purge=True,
+            recurse=(error_handle == "cascade"),
+            if_not_exists="ignore",
+        )
+    except HTTPError:
+        if error_handle == "ignore":
+            return
+        elif error_handle == "fail":
+            raise
+    if logger:
+        logger.keep_track(message_append=f"{style} style deleted.")
