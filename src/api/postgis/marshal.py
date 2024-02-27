@@ -73,6 +73,14 @@ ids = reqparse.Argument(
     required=False,
 )
 
+view = reqparse.Argument(
+    "view",
+    dest="view",
+    location="form",
+    type=str,
+    required=False,
+)
+
 layer_error_handle = reqparse.Argument(
     "error_handle",
     dest="error_handle",
@@ -129,6 +137,7 @@ url_to_geometries_parser = form_maker(
 
 view_to_push_parser = form_maker(
     base_arguments["layer"],
+    view,
     base_arguments["metadata"],
     layer_error_handle,
 )

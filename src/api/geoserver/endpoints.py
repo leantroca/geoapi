@@ -1,6 +1,4 @@
-from flask_restx import Resource
-
-from api.logger import debug_metadata, get_log_response, keep_track, Logger
+from api.logger import debug_metadata, Logger, EndpointServer
 from api.utils import temp_remove, temp_store
 
 from . import namespace
@@ -15,18 +13,6 @@ from .marshal import (
     upload_kml_parser,
 )
 from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_create_layer
-
-
-class EndpointServer(Resource):
-
-    def job_received(self, *args, **kwargs):
-        return {
-            "endpoint": self.endpoint.replace("_", "/").lower(),
-            "layer": kwargs["layer"],
-            "status": 200,
-            "message": "Received.",
-            "json": {key: value for key, value in kwargs.items() if key != "file"},
-        }
 
 
 @namespace.route("/kml/form/create")

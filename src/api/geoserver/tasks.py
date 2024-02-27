@@ -30,7 +30,7 @@ def task_kml_to_create_layer(*args, **kwargs):
         kml_to_create_layer(*args, **kwargs, logger=logger)
         temp_remove(kwargs["file"])
         if logger.log.status == 205:
-            logger.keep_track(message_append="Success!", status=210)
+            logger.keep_track(message_append="Success", status=210)
 
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)
@@ -56,7 +56,7 @@ def task_kml_to_append_layer(*args, **kwargs):
         kml_to_append_layer(*args, **kwargs, logger=logger)
         temp_remove(kwargs["file"])
         if logger.log.status == 205:
-            logger.keep_track(message_append="Success!", status=210)
+            logger.keep_track(message_append="Success", status=210)
 
 
 @app.task(bind=True, max_retries=3, retry_backoff=1)
@@ -81,4 +81,4 @@ def task_delete_layer(*args, **kwargs):
         logger.keep_track(message="Processing.", status=205)
         delete_layer(*args, **kwargs, logger=logger)
         if logger.log.status == 205:
-            logger.keep_track(message_append="Success!", status=210)
+            logger.keep_track(message_append="Success", status=210)

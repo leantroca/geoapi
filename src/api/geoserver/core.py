@@ -3,7 +3,7 @@ from typing import Optional, Union
 from werkzeug.datastructures import FileStorage
 
 from utils.postgis_interface import PostGIS
-from api.logger import core_exception_logger, get_log
+from api.logger import core_exception_logger, get_log, Logger
 from api.utils import generate_batch
 from models.tables import Layers, Logs
 from utils.geoserver_interface import Geoserver
@@ -46,7 +46,7 @@ def kml_to_create_layer(
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "skip",
-    logger = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ) -> None:
     """
@@ -139,7 +139,7 @@ def kml_to_append_layer(
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "skip",
-    logger = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ) -> None:
     """
@@ -218,7 +218,7 @@ def delete_layer(
     delete_geometries: Optional[bool] = False,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "ignore",
-    logger = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ) -> None:
     """

@@ -6,9 +6,27 @@ from utils.postgis_interface import PostGIS
 from models.tables import Logs
 from utils.general import clean_nones
 from werkzeug.exceptions import BadRequest, Conflict, BadGateway, InternalServerError
+from flask_restx import Resource
 
 
 postgis = PostGIS()
+
+
+class EndpointServer(Resource):
+    """
+    Clase personalizada para comunicar parametros de cada endpoint al logger.
+
+    """
+
+    def job_received(self, *args, **kwargs):
+        return {
+            "endpoint": self.endpoint.replace("_", "/").lower(),
+            "layer": kwargs.get("layer"),
+            "status": 200,
+            "message": "Received.",
+            "json": {key: value for key, value in kwargs.items() if key != "file"},
+        }
+
 
 class Logger(PostGIS):
 
