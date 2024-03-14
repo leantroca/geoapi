@@ -7,7 +7,7 @@ from api.logger import core_exception_logger, get_log, Logger
 from api.utils import generate_batch
 from models.tables import Layers, Logs
 from utils.geoserver_interface import Geoserver
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Conflict
 
 geoserver = Geoserver()
 

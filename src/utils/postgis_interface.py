@@ -26,6 +26,8 @@ class PostGIS:
         schema: str = settings.__getattribute__("POSTGIS_SCHEMA"),
         driver: str = settings.__getattribute__("POSTGIS_DRIVER") or "postgresql+psycopg2",
         coordsys: str = settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326",
+        pool_size: int = 10,
+        pool_recycle: int = 1500,
         *args,
         **kwargs,
     ):
@@ -53,6 +55,8 @@ class PostGIS:
         self._coordsys = coordsys
         self._engine = None
         self._session = None
+        self._pool_size = pool_size
+        self._pool_recycle = pool_recycle
 
     def __enter__(self):
         return self
@@ -119,7 +123,6 @@ class PostGIS:
     def engine(self) -> sqlalchemy.engine.Engine:
         if not self._engine:
             self.create_engine()
-            # self._engine.execution_options = {"options": "-c timezone=utc"}
         return self._engine
 
     @property
@@ -154,7 +157,12 @@ class PostGIS:
         Crea un motor SQLAlchemy.
 
         """
-        self._engine = sqlalchemy.create_engine(self.url)
+        self._engine = sqlalchemy.create_engine(
+            self.url,
+            poolclass=sqlalchemy.pool.QueuePool,
+            pool_size=self._pool_size,
+            pool_recycle=self._pool_recycle,
+        )
         self._engine.execution_options(autocommit=False)
 
     def create_session(self) -> None:
