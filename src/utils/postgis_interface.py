@@ -469,9 +469,10 @@ class PostGIS:
             dict: Límites de la geometría.
 
         """
-        table = f"({self.clean(query)}) AS query_result"
-        if query in self.list_views():
-            table = f'"{self.schema}"."{query}"'
+        if query.strip() in self.list_views():
+            table = f'{self.schema}."{query.strip()}"'
+        else:
+            table = f"({self.clean(query)}) AS query_result"
         blist = (
             pandas.read_sql(
                 f"SELECT ST_Extent({geometry_col}) AS bbox_str FROM {table};",
