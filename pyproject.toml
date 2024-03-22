@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "geoapi"
 version = "0.1.0"
-description = "Una interfaz web simplificada para la administración de capas de wms.minhabitat.gob.ar"
+description = "Una interfaz web simplificada para la administración de capas de wms."
 authors = ["Leandro Rocamora"]
 readme = "README.md"
 
