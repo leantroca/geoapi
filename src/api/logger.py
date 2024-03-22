@@ -1,10 +1,99 @@
 import json
 import os
-from typing import Union
+from typing import Tuple, Union
 
-from api.celery import postgis
+from flask_restx import Resource
+from werkzeug.exceptions import BadGateway, Conflict
+
 from models.tables import Logs
 from utils.general import clean_nones
+from utils.postgis_interface import PostGIS
+
+postgis = PostGIS()
+
+
+class EndpointServer(Resource):
+    """
+    Clase personalizada para comunicar parametros de cada endpoint al logger.
+
+    """
+
+    def job_received(self, *args, **kwargs):
+        return {
+            "endpoint": self.endpoint.replace("_", "/").lower(),
+            "layer": kwargs.get("layer"),
+            "status": 200,
+            "message": "Received.",
+            "json": {key: value for key, value in kwargs.items() if key != "file"},
+        }
+
+
+class Logger(PostGIS):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self._log = (
+            self.get_log(id=kwargs["log_id"])
+            if isinstance(kwargs.get("log_id"), int)
+            else None
+        )
+        self.keep_track(*args, **kwargs)
+
+    @property
+    def log(self):
+        if not self._log:
+            self._log = Logs()
+            self.session.add(self._log)
+            self.session.commit()
+        return self._log
+
+    def keep_track(self, *args, **kwargs):
+        """
+        Registra y actualiza información de seguimiento en la base de datos.
+
+        Args:
+            log (Logs, optional): Registro existente en la base de datos. Si no se proporciona,
+                se creará uno nuevo. Default es None.
+            **kwargs: Pares clave-valor que contienen la información a registrar o actualizar.
+
+        Returns:
+            Logs: El registro actualizado en la base de datos.
+
+        """
+        self.log.update(**kwargs)
+        if "message_append" in kwargs:
+            self.message_append(append=kwargs["message_append"])
+        self.session.commit()
+
+    def message_append(self, append: str):
+        """
+        Agrega un mensaje al registro del log.
+
+        Args:
+            append (str): El mensaje a agregar al log.
+
+        Returns:
+            None: No se retorna ningún valor.
+
+        """
+        self.log.message = (
+            (". ".join([self.log.message.strip("."), append.strip(".")]) + ".")
+            if self.log.message
+            else append.strip(".") + "."
+        )
+        self.session.commit()
+
+    def log_response(self) -> Tuple[dict, int]:
+        """
+        Obtiene una respuesta de log unificada.
+
+        Args:
+        - id (Union[int, Logs]): ID del log o un objeto Log.
+
+        Returns:
+        - tuple: Una tupla que contiene el registro del log y su estado.
+
+        """
+        return self.log.record, self.log.status
 
 
 def core_exception_logger(target):
@@ -20,29 +109,34 @@ def core_exception_logger(target):
     """
 
     def wrapper(*args, **kwargs):
-        log_id = kwargs.get("log") or keep_track()
-        log_id = log_id.id if isinstance(log_id, Logs) else log_id
-        # if isinstance(log_id, int):
-        #     log = postgis.get_log(id=log)
-        kwargs["log"] = log_id
+        logger = kwargs.get("logger")
         try:
+            # TODO: Si agrego *args: kml_to_create_layer() got multiple values for argument 'file'. [Lea]
             result = target(**kwargs)
-            postgis.session.commit()
             return result
         except Exception as error:
-            log = postgis.get_log(id=log_id)
-            if isinstance(
-                error, ValueError
-            ):  # reemplazar los: ValueError por: badRequestException
-                log.status = 400
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
-            else:  # serverErrorException
-                log.status = 500
-                log.message = str(error)
-                log.json = debug_metadata(**kwargs)
-                postgis.session.commit()
+            if isinstance(error, Conflict):  # Bad Request
+                if logger:
+                    logger.keep_track(
+                        status=409,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
+                    )
+            elif isinstance(error, BadGateway):  # Bad Gateway from the DB.
+                if logger:
+                    logger.keep_track(
+                        status=502,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
+                    )
+                raise error
+            else:  # Not Yet Implemented.
+                if logger:
+                    logger.keep_track(
+                        status=501,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
+                    )
                 raise error
 
     return wrapper
@@ -65,7 +159,7 @@ def debug_metadata(**kwargs) -> dict:
             if key not in ["file"]
             else str([os.path.basename(element) for element in value])
             for key, value in kwargs.items()
-            if key not in ["log"]
+            if key not in ["logger"]
         }
     )
 

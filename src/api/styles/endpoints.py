@@ -1,8 +1,6 @@
-from flask_restx import Resource
 from requests.exceptions import HTTPError
 
-from api.logger import keep_track
-from utils.postgis_interface import PostGIS
+from api.logger import EndpointServer, Logger, debug_metadata
 
 from . import namespace
 from .core import assign_style_to_layer, delete_style_from_server, push_sld_to_style
@@ -12,19 +10,6 @@ from .marshal import (
     parse_kwargs,
     upload_style_parser,
 )
-
-postgis = PostGIS()
-
-
-class EndpointServer(Resource):
-    def logger(self, *args, **kwargs):
-        return keep_track(
-            endpoint=self.endpoint.replace("_", "/").lower(),
-            layer=None,
-            status=200,
-            message="Received.",
-            json={key: value for key, value in kwargs.items() if key != "file"},
-        )
 
 
 @namespace.route("/create/form")
@@ -59,9 +44,16 @@ class StyleCreateForm(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_style_parser)
-        log = self.logger(**kwargs)
-        push_sld_to_style(**kwargs, log=log)
-        return (log.record, log.status)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                push_sld_to_style(**kwargs, logger=logger)
+            except HTTPError as error:
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+            return logger.log_response()
 
 
 @namespace.route("/assign/form")
@@ -85,6 +77,9 @@ class StyleAssignForm(EndpointServer):
         ### Parámetros:
           - __style__ (requerido): El nombre del estilo que se asignará a la capa.
           - __layer__ (requerido): El nombre de la capa a la que se asignará el estilo.
+          - __error_handle__: Manejo de errores (opciones: "fail", "ignore").
+                - __fail__: Previene eliminar un estilo que esté en uso por una capa.
+                - __ignore__: Evita asignar un nuevo estilo si no existe uno previo con el mismo nombre.
 
         ### Respuestas:
           - __200__: Asignación exitosa del estilo a la capa. (OK)
@@ -92,9 +87,16 @@ class StyleAssignForm(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(assign_style_parser)
-        log = self.logger(**kwargs)
-        assign_style_to_layer(**kwargs, log=log)
-        return (log.record, log.status)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                assign_style_to_layer(**kwargs, logger=logger)
+            except HTTPError as error:
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+            return logger.log_response()
 
 
 @namespace.route("/delete/form")
@@ -125,9 +127,13 @@ class StyleDeleteForm(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(delete_style_parser)
-        log = self.logger(**kwargs)
-        try:
-            delete_style_from_server(**kwargs, log=log)
-        except HTTPError as error:
-            keep_track(log, status=400, message=str(error))
-        return (log.record, log.status)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                delete_style_from_server(**kwargs, logger=logger)
+            except HTTPError as error:
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+            return logger.log_response()

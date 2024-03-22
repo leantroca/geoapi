@@ -2,11 +2,10 @@ from typing import List, Optional, Union
 
 from werkzeug.datastructures import FileStorage
 
-from api.celery import postgis
-from api.logger import core_exception_logger, get_log
+from api.logger import Logger, core_exception_logger
 from api.utils import generate_batch
-from models.tables import Logs
 from utils.geoserver_interface import Geoserver
+from utils.postgis_interface import PostGIS
 
 geoserver = Geoserver()
 
@@ -28,7 +27,8 @@ def kml_to_create_batch(
     fuente: Optional[str] = None,
     json: Optional[dict] = None,
     error_handle: Optional[str] = "skip",
-    log: Logs = None,
+    logger: Optional[Logger] = None,
+    **kwargs,
 ) -> None:
     """
     Convierte un archivo KML en geometrías para la base de datos de PostGIS.
@@ -56,35 +56,41 @@ def kml_to_create_batch(
         None
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    new_batch = generate_batch(
-        file=file,
-        obra=obra,
-        operatoria=operatoria,
-        provincia=provincia,
-        departamento=departamento,
-        municipio=municipio,
-        localidad=localidad,
-        estado=estado,
-        descripcion=descripcion,
-        cantidad=cantidad,
-        categoria=categoria,
-        ente=ente,
-        fuente=fuente,
-        json=json,
-        error_handle=error_handle,
-    )
-    postgis.session.add(new_batch)
-    log.batch = new_batch
-    log.message = "PostGIS KML ingested."
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        new_batch = generate_batch(
+            file=file,
+            obra=obra,
+            operatoria=operatoria,
+            provincia=provincia,
+            departamento=departamento,
+            municipio=municipio,
+            localidad=localidad,
+            estado=estado,
+            descripcion=descripcion,
+            cantidad=cantidad,
+            categoria=categoria,
+            ente=ente,
+            fuente=fuente,
+            json=json,
+            error_handle=error_handle,
+        )
+        postgis.session.add(new_batch)
+        postgis.session.flush()
+        batch_id = new_batch.id
+    # Fin de operaciones en DB.
+    if logger:
+        logger.keep_track(
+            batch_id=batch_id,
+            message_append="PostGIS KML ingested.",
+        )
 
 
 @core_exception_logger
 def view_push_to_layer(
     layer: str,
+    view: Optional[str] = None,
     error_handle: str = "fail",
-    log: Logs = None,
+    logger: Optional[Logger] = None,
     **kwargs,
 ):
     """
@@ -99,23 +105,31 @@ def view_push_to_layer(
     - kwargs: Otros argumentos opcionales.
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    new_layer = postgis.get_or_create_layer(name=layer)
-    postgis.session.add(new_layer)
+    with PostGIS() as postgis:
+        new_layer = postgis.get_or_create_layer(name=layer)
+        postgis.session.add(new_layer)
+    # Fin de operaciones en DB.
+    if logger:
+        logger.keep_track(
+            message_append="View created.",
+        )
     geoserver.push_layer(
         layer=layer,
+        view=view,
         if_exists=error_handle,
-        **postgis.bbox(layer),
+        **postgis.bbox(view),
     )
-    log.message_append("Geoserver layer created.")
-    postgis.session.commit()
+    if logger:
+        logger.keep_track(
+            message_append="Geoserver layer created.",
+        )
 
 
 @core_exception_logger
 def delete_geometries(
     ids: Union[int, List[int]],
     error_handle: str = "fail",
-    log: Optional[int] = None,
+    logger: Optional[Logger] = None,
     *args,
     **kwargs,
 ):
@@ -132,10 +146,12 @@ def delete_geometries(
     - kwargs: Otros argumentos opcionales.
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    count = postgis.drop_geometries(ids)
-    log.message = f"Postgis deleted {count} geometries."
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        count = postgis.drop_geometries(ids)
+    if logger:
+        logger.keep_track(
+            message_append=f"Postgis deleted {count} geometries.",
+        )
 
 
 @core_exception_logger
@@ -143,7 +159,7 @@ def delete_batches(
     ids: Union[int, List[int]],
     cascade: bool = False,
     error_handle: str = "fail",
-    log: Optional[int] = None,
+    logger: Optional[Logger] = None,
     *args,
     **kwargs,
 ):
@@ -161,7 +177,9 @@ def delete_batches(
     - kwargs: Otros argumentos opcionales.
 
     """
-    log = get_log(log) if isinstance(log, int) else log or Logs()
-    count = postgis.drop_batches(ids, cascade=cascade)
-    log.message = f"Postgis deleted {count} geometries."
-    postgis.session.commit()
+    with PostGIS() as postgis:
+        count = postgis.drop_batches(ids, cascade=cascade)
+    if logger:
+        logger.keep_track(
+            message_append=f"Postgis deleted {count} geometries.",
+        )

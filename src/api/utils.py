@@ -61,14 +61,25 @@ def is_true(value):
     return value.lower() == "true"
 
 
+def str_under_n(n: int = 64):
+    def validate(value):
+        if not isinstance(value, str):
+            raise ValueError(f"'{value}' must be a string.")
+        if not len(value) < n:
+            raise ValueError(f"'{value}' must be under {n} characters long.")
+        return value
+
+    return validate
+
+
 base_arguments = {
     "layer": reqparse.Argument(
         "layer",
         dest="layer",
         location="form",
-        type=str,
+        type=str_under_n(63),
         required=True,
-        help="Target layer name.",
+        help="Target layer name. Must be under 63 characters.",
     ),
     "style": reqparse.Argument(
         "style",

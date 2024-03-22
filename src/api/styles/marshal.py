@@ -70,6 +70,15 @@ error_delete_unexisting_style = reqparse.Argument(
     choices=["fail", "cascade"],
 )
 
+error_assign_unexisting_style = reqparse.Argument(
+    "error_handle",
+    dest="error_handle",
+    location="form",
+    type=str,
+    required=False,
+    default="fail",
+    choices=["fail", "ignore"],
+)
 
 upload_style_parser = form_maker(
     base_arguments["file"],
@@ -81,6 +90,7 @@ upload_style_parser = form_maker(
 assign_style_parser = form_maker(
     base_arguments["style"],
     base_arguments["layer"],
+    error_assign_unexisting_style,
     base_arguments["metadata"],
 )
 

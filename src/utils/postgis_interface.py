@@ -4,6 +4,7 @@ from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from models.tables import Batches, Geometries, Layers, Logs
@@ -17,13 +18,17 @@ class PostGIS:
 
     def __init__(
         self,
-        host: Optional[str] = None,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        driver: Optional[str] = None,
-        coordsys: Optional[str] = None,
+        host: Optional[str] = settings.__getattribute__("POSTGIS_HOSTNAME"),
+        port: Optional[int] = settings.__getattribute__("POSTGIS_PORT"),
+        username: str = settings.__getattribute__("POSTGIS_USER"),
+        password: str = settings.__getattribute__("POSTGIS_PASS"),
+        database: str = settings.__getattribute__("POSTGIS_DATABASE"),
+        schema: str = settings.__getattribute__("POSTGIS_SCHEMA"),
+        driver: str = settings.__getattribute__("POSTGIS_DRIVER")
+        or "postgresql+psycopg2",
+        coordsys: str = settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326",
+        pool_size: int = 10,
+        pool_recycle: int = 1500,
         *args,
         **kwargs,
     ):
@@ -42,23 +47,33 @@ class PostGIS:
             **kwargs: Argumentos clave adicionales.
 
         """
-        self._host = host or settings.__getattribute__("POSTGIS_HOSTNAME") + ":" + str(
-            settings.__getattribute__("POSTGIS_PORT")
-        )
-        self._username = username or settings.__getattribute__("POSTGIS_USER")
-        self._password = password or settings.__getattribute__("POSTGIS_PASS")
-        self._database = database or settings.__getattribute__("POSTGIS_DATABASE")
-        self._schema = schema or settings.__getattribute__("POSTGIS_SCHEMA")
-        self._driver = (
-            driver
-            or settings.__getattribute__("POSTGIS_DRIVER")
-            or "postgresql+psycopg2"
-        )
-        self._coordsys = (
-            coordsys or settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326"
-        )
+        self._host = host + (f":{port}" if port else "")
+        self._username = username
+        self._password = password
+        self._database = database
+        self._schema = schema
+        self._driver = driver
+        self._coordsys = coordsys
         self._engine = None
         self._session = None
+        self._pool_size = pool_size
+        self._pool_recycle = pool_recycle
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            if not exc_type:
+                self.session.commit()
+            else:
+                if isinstance(exc_value, DatabaseError):
+                    print("Error occurred, rolling back changes...")
+                    self.session.rollback()
+                else:
+                    raise
+        finally:
+            self.session.close()
 
     @property
     def host(self) -> Optional[str]:
@@ -109,7 +124,6 @@ class PostGIS:
     def engine(self) -> sqlalchemy.engine.Engine:
         if not self._engine:
             self.create_engine()
-            # self._engine.execution_options = {"options": "-c timezone=utc"}
         return self._engine
 
     @property
@@ -144,7 +158,12 @@ class PostGIS:
         Crea un motor SQLAlchemy.
 
         """
-        self._engine = sqlalchemy.create_engine(self.url)
+        self._engine = sqlalchemy.create_engine(
+            self.url,
+            poolclass=sqlalchemy.pool.QueuePool,
+            pool_size=self._pool_size,
+            pool_recycle=self._pool_recycle,
+        )
         self._engine.execution_options(autocommit=False)
 
     def create_session(self) -> None:
@@ -268,6 +287,7 @@ class PostGIS:
                 WHERE la.name = '{layer}')
             """
         )
+        self.session.commit()
 
     def drop_view(
         self,
@@ -450,9 +470,10 @@ class PostGIS:
             dict: Límites de la geometría.
 
         """
-        table = f"({self.clean(query)}) AS query_result"
-        if query in self.list_views():
-            table = f'"{self.schema}"."{query}"'
+        if query.strip() in self.list_views():
+            table = f'{self.schema}."{query.strip()}"'
+        else:
+            table = f"({self.clean(query)}) AS query_result"
         blist = (
             pandas.read_sql(
                 f"SELECT ST_Extent({geometry_col}) AS bbox_str FROM {table};",

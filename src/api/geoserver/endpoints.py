@@ -1,6 +1,4 @@
-from flask_restx import Resource
-
-from api.logger import debug_metadata, get_log_response, keep_track
+from api.logger import EndpointServer, Logger, debug_metadata
 from api.utils import temp_remove, temp_store
 
 from . import namespace
@@ -15,17 +13,6 @@ from .marshal import (
     upload_kml_parser,
 )
 from .tasks import task_delete_layer, task_kml_to_append_layer, task_kml_to_create_layer
-
-
-class EndpointServer(Resource):
-    def logger(self, *args, **kwargs):
-        return keep_track(
-            endpoint=self.endpoint.replace("_", "/").lower(),
-            layer=kwargs["layer"],
-            status=200,
-            message="Received.",
-            json={key: value for key, value in kwargs.items() if key != "file"},
-        )
 
 
 @namespace.route("/kml/form/create")
@@ -67,21 +54,23 @@ class KMLFormCreate(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(upload_kml_parser)
-        log = self.logger(**kwargs)
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            verify_layer_not_exists(kwargs["layer"])
-            log_id = log if isinstance(log, int) else log.id
-            task_kml_to_create_layer.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                # TODO: Verificar archivo antes de continuar. [Lea]
+                kwargs["file"] = temp_store(kwargs["file"])
+                verify_layer_not_exists(kwargs["layer"])
+                # task.delay requiere argumentos que sean JSON serializable.
+                task_kml_to_create_layer.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                # Algo falló con los parámetros.
+                # TODO: Unificar con verificación de archivo. [Leo]
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/kml/form/append")
@@ -121,23 +110,26 @@ class KMLFormAppend(EndpointServer):
           - __200__: Importación exitosa. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
         kwargs = parse_kwargs(upload_kml_parser)
-        log = self.logger(**kwargs)
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            verify_layer_exists(kwargs["layer"])
-            log_id = log if isinstance(log, int) else log.id
-            task_kml_to_append_layer.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                # TODO: Verificar archivo antes de continuar. [Lea]
+                kwargs["file"] = temp_store(kwargs["file"])
+                verify_layer_exists(kwargs["layer"])
+                # task.delay requiere argumentos que sean JSON serializable.
+                task_kml_to_append_layer.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                # Algo falló con los parámetros.
+                # TODO: Unificar con verificación de archivo. [Leo]
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/url/form/create")
@@ -177,23 +169,25 @@ class URLFormCreate(EndpointServer):
           - __200__: Importación exitosa. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
         kwargs = parse_kwargs(download_kml_parser)
-        log = self.logger(**kwargs)
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            verify_layer_not_exists(kwargs["layer"])
-            log_id = log if isinstance(log, int) else log.id
-            task_kml_to_create_layer.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                # TODO: Verificar archivo antes de continuar. [Lea]
+                kwargs["file"] = temp_store(kwargs["file"])
+                verify_layer_not_exists(kwargs["layer"])
+                task_kml_to_create_layer.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                # Algo falló con los parámetros.
+                # TODO: Unificar con verificación de archivo. [Leo]
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/url/form/append")
@@ -233,23 +227,25 @@ class URLFormAppend(EndpointServer):
           - __200__: Importación exitosa. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
         kwargs = parse_kwargs(download_kml_parser)
-        log = self.logger(**kwargs)
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            verify_layer_exists(kwargs["layer"])
-            log_id = log if isinstance(log, int) else log.id
-            task_kml_to_append_layer.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                # TODO: Verificar archivo antes de continuar. [Lea]
+                kwargs["file"] = temp_store(kwargs["file"])
+                verify_layer_exists(kwargs["layer"])
+                task_kml_to_append_layer.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                # Algo falló con los parámetros.
+                # TODO: Unificar con verificación de archivo. [Leo]
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/layer/form/delete")
@@ -277,9 +273,10 @@ class DeleteLayer(EndpointServer):
           - __200__: Importación exitosa. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
+        # TODO: Esta tarea podría ser sincrónica. [Lea]
         kwargs = parse_kwargs(delete_layer_parser)
-        log = self.logger(**kwargs)
-        log_id = log if isinstance(log, int) else log.id
-        task_delete_layer.delay(**kwargs, log=log_id)
-        return get_log_response(log)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            task_delete_layer.delay(**kwargs, log_id=logger.log.id)
+            return logger.log_response()

@@ -1,5 +1,5 @@
 from io import BufferedReader
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 from urllib.parse import urlparse
 
 import requests
@@ -118,6 +118,7 @@ class Geoserver:
     def push_layer(
         self,
         layer: str,
+        view: Optional[str] = None,
         minx: Union[float, str] = -73.4154357571,
         maxx: Union[float, str] = -55.25,
         miny: Union[float, str] = -53.628348965,
@@ -153,6 +154,7 @@ class Geoserver:
                 self.delete_layer(layer=layer)
             elif if_exists.lower() == "ignore":
                 return
+        view = view or layer
         response = requests.post(
             f"{self.rest_url}/workspaces/{self.workspace}"
             + f"/datastores/{self.datastore}/featuretypes",
@@ -160,7 +162,8 @@ class Geoserver:
             headers={"Content-type": "text/xml"},
             data=f"""
                 <featureType>
-                  <name>{layer}</name>
+                  <name>{view}</name>
+                  <title>{layer}</title>
                   <nativeCRS>{self.coordsys}</nativeCRS>
                   <srs>{self.coordsys}</srs>
                   <nativeBoundingBox>

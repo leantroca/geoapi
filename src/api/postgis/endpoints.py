@@ -1,6 +1,4 @@
-from flask_restx import Resource
-
-from api.logger import debug_metadata, get_log_response, keep_track
+from api.logger import EndpointServer, Logger, debug_metadata
 from api.utils import temp_remove, temp_store
 
 from . import namespace
@@ -19,17 +17,6 @@ from .tasks import (
     task_kml_to_create_batch,
     task_view_push_to_layer,
 )
-
-
-class EndpointServer(Resource):
-    def logger(self, *args, **kwargs):
-        return keep_track(
-            endpoint=self.endpoint.replace("_", "/").lower(),
-            layer=None,
-            status=200,
-            message="Received.",
-            json={key: value for key, value in kwargs.items() if key != "file"},
-        )
 
 
 @namespace.route("/kml/form/ingest")
@@ -70,20 +57,19 @@ class KMLFormIngest(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(kml_to_geometries_parser)
-        log_id = self.logger(**kwargs).id
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            # log_id = log if isinstance(log, int) else log.id
-            task_kml_to_create_batch.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log_id,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log_id)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                kwargs["file"] = temp_store(kwargs["file"])
+                task_kml_to_create_batch.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                # TODO: Este except se repite igual en todos los endpoints. Unificar. [Lea]
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/url/form/ingest")
@@ -123,22 +109,21 @@ class URLFormCreate(EndpointServer):
           - __200__: Importación exitosa. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
         kwargs = parse_kwargs(url_to_geometries_parser)
-        log_id = self.logger(**kwargs).id
-        try:
-            kwargs["file"] = temp_store(kwargs["file"])
-            # log_id = log if isinstance(log, int) else log.id
-            task_kml_to_create_batch.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log_id,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-            temp_remove(kwargs["file"])
-        return get_log_response(log_id)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                kwargs["file"] = temp_store(kwargs["file"])
+                task_kml_to_create_batch.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+                temp_remove(kwargs["file"])
+            return logger.log_response()
 
 
 @namespace.route("/layer/form/push")
@@ -166,17 +151,16 @@ class ViewFormPush(EndpointServer):
           - __500__: Error interno del servidor. (Error del servidor interno)
         """
         kwargs = parse_kwargs(view_to_push_parser)
-        log_id = self.logger(**kwargs).id
-        try:
-            task_view_push_to_layer.delay(**kwargs, log=log_id)
-        except ValueError as error:
-            keep_track(
-                log=log_id,
-                status=400,
-                message=str(error),
-                json=debug_metadata(**kwargs),
-            )
-        return get_log_response(log_id)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            try:
+                task_view_push_to_layer.delay(**kwargs, log_id=logger.log.id)
+            except ValueError as error:
+                logger.keep_track(
+                    status=400,
+                    message=str(error),
+                    json=debug_metadata(**kwargs),
+                )
+            return logger.log_response()
 
 
 @namespace.route("/delete/geometry")
@@ -201,12 +185,13 @@ class DeleteGeometry(EndpointServer):
           - __200__: Proceso exitoso. (OK)
           - __400__: Datos de solicitud inválidos. (Solicitud incorrecta)
           - __500__: Error interno del servidor. (Error del servidor interno)
+
         """
         kwargs = parse_kwargs(delete_geometry_parser)
         kwargs = parse_ids(kwargs)
-        log_id = self.logger(**kwargs).id
-        task_delete_geometries.delay(**kwargs, log=log_id)
-        return get_log_response(log_id)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            task_delete_geometries.delay(**kwargs, log_id=logger.log.id)
+            return logger.log_response()
 
 
 @namespace.route("/delete/batch")
@@ -234,6 +219,6 @@ class DeleteBatch(EndpointServer):
         """
         kwargs = parse_kwargs(delete_batch_parser)
         kwargs = parse_ids(kwargs)
-        log_id = self.logger(**kwargs).id
-        task_delete_batches.delay(**kwargs, log=log_id)
-        return get_log_response(log_id)
+        with Logger(**self.job_received(**kwargs)) as logger:
+            task_delete_batches.delay(**kwargs, log_id=logger.log.id)
+            return logger.log_response()
