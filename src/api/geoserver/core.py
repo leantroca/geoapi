@@ -1,13 +1,13 @@
 from typing import Optional, Union
 
 from werkzeug.datastructures import FileStorage
+from werkzeug.exceptions import Conflict
 
-from utils.postgis_interface import PostGIS
-from api.logger import core_exception_logger, get_log, Logger
+from api.logger import Logger, core_exception_logger
 from api.utils import generate_batch
-from models.tables import Layers, Logs
+from models.tables import Layers
 from utils.geoserver_interface import Geoserver
-from werkzeug.exceptions import BadRequest, Conflict
+from utils.postgis_interface import PostGIS
 
 geoserver = Geoserver()
 
@@ -78,6 +78,7 @@ def kml_to_create_layer(
     """
     with PostGIS() as postgis:
         # Genera nueva Layer
+        # TODO: Esto se puede abstraer como `new_batch`. [Lea]
         new_layer = Layers(
             name=layer,
         )
@@ -247,10 +248,13 @@ def delete_layer(
     # Fin de operaciones en DB.
     if logger:
         logger.keep_track(
-            message_append="View deleted." + "Geometries deleted." if delete_geometries else "",
+            message_append="View deleted." + "Geometries deleted."
+            if delete_geometries
+            else "",
         )
     geoserver.delete_layer(layer=layer, if_not_exists=error_handle)
     if logger:
         logger.keep_track(
-            message_append="Geoserver layer deleted. " + f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted.",
+            message_append="Geoserver layer deleted. "
+            + f"Postgis layer {'and geometries ' if delete_geometries else ''}deleted.",
         )

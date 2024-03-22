@@ -4,8 +4,8 @@ from urllib.parse import quote_plus
 
 import pandas
 import sqlalchemy
-from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.exc import DatabaseError
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from models.tables import Batches, Geometries, Layers, Logs
 from utils.config import settings
@@ -24,7 +24,8 @@ class PostGIS:
         password: str = settings.__getattribute__("POSTGIS_PASS"),
         database: str = settings.__getattribute__("POSTGIS_DATABASE"),
         schema: str = settings.__getattribute__("POSTGIS_SCHEMA"),
-        driver: str = settings.__getattribute__("POSTGIS_DRIVER") or "postgresql+psycopg2",
+        driver: str = settings.__getattribute__("POSTGIS_DRIVER")
+        or "postgresql+psycopg2",
         coordsys: str = settings.__getattribute__("COORDINATE_SYSTEM") or "EPSG:4326",
         pool_size: int = 10,
         pool_recycle: int = 1500,
@@ -63,16 +64,16 @@ class PostGIS:
 
     def __exit__(self, exc_type, exc_value, traceback):
         try:
-          if not exc_type:
-            self.session.commit()
-          else:
-            if isinstance(exc_value, DatabaseError):
-              print("Error occurred, rolling back changes...")
-              self.session.rollback()
+            if not exc_type:
+                self.session.commit()
             else:
-              raise
+                if isinstance(exc_value, DatabaseError):
+                    print("Error occurred, rolling back changes...")
+                    self.session.rollback()
+                else:
+                    raise
         finally:
-          self.session.close()
+            self.session.close()
 
     @property
     def host(self) -> Optional[str]:

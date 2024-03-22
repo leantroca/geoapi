@@ -2,11 +2,10 @@ from typing import List, Optional, Union
 
 from werkzeug.datastructures import FileStorage
 
-from utils.postgis_interface import PostGIS
-from api.logger import core_exception_logger, Logger
+from api.logger import Logger, core_exception_logger
 from api.utils import generate_batch
-from models.tables import Logs
 from utils.geoserver_interface import Geoserver
+from utils.postgis_interface import PostGIS
 
 geoserver = Geoserver()
 

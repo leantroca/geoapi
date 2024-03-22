@@ -1,5 +1,5 @@
 from io import BufferedReader
-from typing import Literal, Union, Optional
+from typing import Literal, Optional, Union
 from urllib.parse import urlparse
 
 import requests

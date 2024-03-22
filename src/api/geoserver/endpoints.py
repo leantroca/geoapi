@@ -1,4 +1,4 @@
-from api.logger import debug_metadata, Logger, EndpointServer
+from api.logger import EndpointServer, Logger, debug_metadata
 from api.utils import temp_remove, temp_store
 
 from . import namespace

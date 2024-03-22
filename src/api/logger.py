@@ -1,13 +1,13 @@
 import json
 import os
-from typing import Union, Optional, Tuple
+from typing import Tuple, Union
 
-from utils.postgis_interface import PostGIS
+from flask_restx import Resource
+from werkzeug.exceptions import BadGateway, Conflict
+
 from models.tables import Logs
 from utils.general import clean_nones
-from werkzeug.exceptions import BadRequest, Conflict, BadGateway, InternalServerError
-from flask_restx import Resource
-
+from utils.postgis_interface import PostGIS
 
 postgis = PostGIS()
 
@@ -29,12 +29,14 @@ class EndpointServer(Resource):
 
 
 class Logger(PostGIS):
-
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self._log = self.get_log(id=kwargs["log_id"]) if isinstance(kwargs.get("log_id"), int) else None
+        self._log = (
+            self.get_log(id=kwargs["log_id"])
+            if isinstance(kwargs.get("log_id"), int)
+            else None
+        )
         self.keep_track(*args, **kwargs)
-
 
     @property
     def log(self):
@@ -43,7 +45,6 @@ class Logger(PostGIS):
             self.session.add(self._log)
             self.session.commit()
         return self._log
-    
 
     def keep_track(self, *args, **kwargs):
         """
@@ -63,14 +64,23 @@ class Logger(PostGIS):
             self.message_append(append=kwargs["message_append"])
         self.session.commit()
 
+    def message_append(self, append: str):
+        """
+        Agrega un mensaje al registro del log.
 
-    def message_append(self, append:str):
-        """TBD"""
+        Args:
+            append (str): El mensaje a agregar al log.
+
+        Returns:
+            None: No se retorna ningún valor.
+
+        """
         self.log.message = (
-            ". ".join([self.log.message.strip("."), append.strip(".")]) + "."
-        ) if self.log.message else append.strip(".") + "."
+            (". ".join([self.log.message.strip("."), append.strip(".")]) + ".")
+            if self.log.message
+            else append.strip(".") + "."
+        )
         self.session.commit()
-
 
     def log_response(self) -> Tuple[dict, int]:
         """
@@ -84,7 +94,6 @@ class Logger(PostGIS):
 
         """
         return self.log.record, self.log.status
-
 
 
 def core_exception_logger(target):
@@ -106,31 +115,27 @@ def core_exception_logger(target):
             result = target(**kwargs)
             return result
         except Exception as error:
-            if isinstance(
-                error, Conflict
-            ): # Bad Request
+            if isinstance(error, Conflict):  # Bad Request
                 if logger:
                     logger.keep_track(
-                        status = 409,
-                        message_append = str(error),
-                        json = debug_metadata(**kwargs),
+                        status=409,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
                     )
-            elif isinstance(
-                error, BadGateway
-            ): # Bad Gateway from the DB.
+            elif isinstance(error, BadGateway):  # Bad Gateway from the DB.
                 if logger:
                     logger.keep_track(
-                        status = 502,
-                        message_append = str(error),
-                        json = debug_metadata(**kwargs),
+                        status=502,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
                     )
                 raise error
             else:  # Not Yet Implemented.
                 if logger:
                     logger.keep_track(
-                        status = 501,
-                        message_append = str(error),
-                        json = debug_metadata(**kwargs),
+                        status=501,
+                        message_append=str(error),
+                        json=debug_metadata(**kwargs),
                     )
                 raise error
 

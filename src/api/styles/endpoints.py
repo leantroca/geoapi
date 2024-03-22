@@ -1,7 +1,6 @@
-from flask_restx import Resource
 from requests.exceptions import HTTPError
 
-from api.logger import EndpointServer, Logger
+from api.logger import EndpointServer, Logger, debug_metadata
 
 from . import namespace
 from .core import assign_style_to_layer, delete_style_from_server, push_sld_to_style
@@ -78,6 +77,9 @@ class StyleAssignForm(EndpointServer):
         ### Parámetros:
           - __style__ (requerido): El nombre del estilo que se asignará a la capa.
           - __layer__ (requerido): El nombre de la capa a la que se asignará el estilo.
+          - __error_handle__: Manejo de errores (opciones: "fail", "ignore").
+                - __fail__: Previene eliminar un estilo que esté en uso por una capa.
+                - __ignore__: Evita asignar un nuevo estilo si no existe uno previo con el mismo nombre.
 
         ### Respuestas:
           - __200__: Asignación exitosa del estilo a la capa. (OK)

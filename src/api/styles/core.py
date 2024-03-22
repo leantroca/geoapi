@@ -1,10 +1,9 @@
-from typing import Literal, Union, Optional
+from typing import Literal, Optional, Union
 
 from requests.exceptions import HTTPError
 from werkzeug.datastructures import FileStorage
 
-from api.logger import core_exception_logger, Logger
-from models.tables import Logs
+from api.logger import Logger, core_exception_logger
 from utils.geoserver_interface import Geoserver
 from utils.sld_interface import SLD
 
@@ -72,6 +71,7 @@ def push_sld_to_style(
 def assign_style_to_layer(
     style: str,
     layer: str,
+    error_handle: Literal["fail", "ignore"] = "fail",
     logger: Optional[Logger] = None,
     **kwargs,
 ):

@@ -1,5 +1,5 @@
 from api.celery import app
-from api.logger import get_log, keep_track, Logger
+from api.logger import Logger
 from api.utils import temp_remove
 
 from .core import (
